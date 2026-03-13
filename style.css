@@ -150,27 +150,32 @@ body::after {
 /* --- UI COMPONENTS --- */
 
 /* --- FLUGE LOGO — Esquina superior derecha --- */
-#fluge-logo {
+#brand-logos {
     position: fixed;
-    top: 50px;
-    right: 80px;
+    top: 20px;
+    right: 20px;
     z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
     pointer-events: none;
     animation: logo-fade-in 1.5s ease forwards;
     opacity: 0;
 }
 
-#fluge-logo img {
-    width: 110px;
+#logo-girasomnis {
+    width: 130px;
     height: auto;
-    filter: drop-shadow(0 0 8px rgba(255, 196, 0, 0.35)) drop-shadow(0 0 20px rgba(255, 160, 0, 0.15));
-    opacity: 0.85;
-    transition: opacity 0.3s ease, filter 0.3s ease;
+    filter: drop-shadow(0 0 8px rgba(0, 200, 255, 0.3));
+    opacity: 0.90;
 }
 
-#fluge-logo img:hover {
-    opacity: 1;
-    filter: drop-shadow(0 0 14px rgba(255, 210, 0, 0.6)) drop-shadow(0 0 30px rgba(255, 160, 0, 0.3));
+#logo-immerso {
+    width: 60px;
+    height: auto;
+    filter: drop-shadow(0 0 8px rgba(0, 200, 255, 0.4));
+    opacity: 0.85;
 }
 
 @keyframes logo-fade-in {
