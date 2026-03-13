@@ -762,7 +762,7 @@ function handleRealtimeEvent(event) {
             // 3. Han pasado al menos 1.5s desde que Viki empezó a hablar (evita feedback inmediato)
             const speakingDuration = lipsyncStartTime ? (Date.now() - lipsyncStartTime) : 0;
             const speechDuration = speechStartTime ? (Date.now() - speechStartTime) : 0;
-            if (isSpeaking && speechDuration >= 800 && speakingDuration >= 1500) {
+          if (isSpeaking && speechDuration >= 1200 && speakingDuration >= 3000) {
                 sendRealtimeEvent({ type: 'response.cancel' });
                 isSpeaking = false;
                 lipsyncTimeline = [];
