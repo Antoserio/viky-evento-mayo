@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viki Avatar - Fluge Experience</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+    <div id="canvas-container"></div>
+
+    <!-- Logo Fluge — esquina superior derecha -->
+    <div id="fluge-logo">
+        <img src="fluge-logo-yellow.png" alt="Fluge" />
+    </div>
+
+    <div id="ui-container">
+        <button id="mic-btn">🎙️</button>
+        <button id="pdf-btn" class="hidden" title="Descargar conversación PDF">📄</button>
+        <textarea id="chat-input" placeholder="Escribe o habla..."></textarea>
+        <button id="send-btn">Enviar</button>
+    </div>
+
+    <div id="loading" class="hidden">Pensando...</div>
+    <div id="status">Esperando modelo...</div>
+
+    <!-- VIDEO PANEL -->
+    <div id="video-panel" class="hidden">
+        <div id="video-header">
+            <span id="video-label">Proyecto Fluge</span>
+            <button id="video-close">✕</button>
+        </div>
+        <div id="video-content">
+            <iframe id="video-frame" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <!-- MediaPipe Face Detection para seguimiento de mirada -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"
+        crossorigin="anonymous"></script>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module" src="main.js"></script>
+</body>
+
+</html>

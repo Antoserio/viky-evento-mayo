@@ -1,0 +1,15 @@
+{
+    "name": "viky-avatar-threejs",
+    "version": "1.0.0",
+    "description": "Avatar 3D Viky",
+    "dependencies": {
+        "openai": "^4.2.0"
+    },
+    "devDependencies": {
+        "netlify-cli": "^17.0.0"
+    },
+    "scripts": {
+        "build": "echo 'No build required for pure static'",
+        "dev": "netlify dev"
+    }
+}
