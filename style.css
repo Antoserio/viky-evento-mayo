@@ -150,32 +150,34 @@ body::after {
 /* --- UI COMPONENTS --- */
 
 /* --- FLUGE LOGO — Esquina superior derecha --- */
-#brand-logos {
+/* Logo Girasomnis — cuello de Viki */
+#logo-girasomnis-wrap {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 200;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 150;
     pointer-events: none;
-    animation: logo-fade-in 1.5s ease forwards;
+    animation: logo-fade-in 2s ease forwards;
     opacity: 0;
 }
 
 #logo-girasomnis {
-    width: 130px;
+    width: 220px;
     height: auto;
-    filter: drop-shadow(0 0 8px rgba(0, 200, 255, 0.3));
-    opacity: 0.90;
+    mix-blend-mode: screen;
+    opacity: 0.75;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.1));
 }
 
+/* Logo IMMERSO — dentro de la barra UI, a la izquierda del micro */
 #logo-immerso {
-    width: 60px;
-    height: auto;
-    filter: drop-shadow(0 0 8px rgba(0, 200, 255, 0.4));
-    opacity: 0.85;
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    border-radius: 8px;
+    opacity: 0.9;
+    flex-shrink: 0;
 }
 
 @keyframes logo-fade-in {
