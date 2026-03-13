@@ -154,7 +154,7 @@ body::after {
 #logo-girasomnis-wrap {
     position: fixed;
     bottom: 100px;
-    right: 30px;
+    right: 150px;
     z-index: 150;
     pointer-events: none;
     animation: logo-fade-in 2s ease forwards;
