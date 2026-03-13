@@ -150,12 +150,11 @@ body::after {
 /* --- UI COMPONENTS --- */
 
 /* --- FLUGE LOGO — Esquina superior derecha --- */
-/* Logo Girasomnis — cuello de Viki */
+/* Logo Girasomnis — abajo derecha */
 #logo-girasomnis-wrap {
     position: fixed;
-    bottom: 120px;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 100px;
+    right: 30px;
     z-index: 150;
     pointer-events: none;
     animation: logo-fade-in 2s ease forwards;
