@@ -1218,12 +1218,47 @@ function addSessionMessage(role, content) {
     if (sessionMessages.length > 30) sessionMessages.splice(0, 10);
 }
 function extractUserData(text) {
-    const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+    // Normalizar "arroba" → "@"
+    const normalizedText = text.replace(/\sarroba\s/gi, "@").replace(/\sarroba/gi, "@");
+    let emailMatch = normalizedText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+    if (!emailMatch) {
+        const noAtMatch = normalizedText.match(/\b([a-zA-Z0-9._%+-]+\.(?:gmail|hotmail|outlook|yahoo|icloud|immerso|fluge|me)\.[a-zA-Z]{2,})\b/i);
+        if (noAtMatch) emailMatch = [noAtMatch[0].replace(/(\w+\.)(\w+\.\w+)/, "$1@$2")];
+    }
     if (emailMatch) saveMemory({ email: emailMatch[0] });
     const nameMatch = text.match(/(?:me llamo|soy|mi nombre es)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)/i);
     if (nameMatch) saveMemory({ name: nameMatch[1] });
     const companyMatch = text.match(/(?:trabajo en|soy de|mi empresa es|vengo de|represento a)\s+([\w\s&]+?)(?:[.,]|$)/i);
     if (companyMatch) saveMemory({ company: companyMatch[1].trim() });
+
+    // Enviar lead cuando tengamos email
+    const mem = getMemory();
+    if (mem.email && !mem.leadSent) {
+        sendLead(mem);
+        saveMemory({ leadSent: true });
+    }
+}
+
+async function sendLead(mem) {
+    try {
+        const conversacion = sessionMessages
+            .map(m => `${m.role === 'user' ? 'Visitante' : 'Viky'}: ${m.content}`)
+            .join('\n');
+        await fetch('/.netlify/functions/send-lead', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nombre: mem.name || '',
+                empresa: mem.company || '',
+                email: mem.email || '',
+                tema: '',
+                conversacion,
+            }),
+        });
+        console.log('📧 Lead enviado');
+    } catch (e) {
+        console.error('❌ Error enviando lead:', e);
+    }
 }
 
 function generatePDF() {
