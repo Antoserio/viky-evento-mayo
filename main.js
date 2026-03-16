@@ -630,10 +630,7 @@ async function initRealtime() {
 
             micBtn.style.background = '#FF4136';
             // Arrancar en modo dormido
-            // Resetear leadSent al iniciar sesión nueva
-        const mem = getMemory();
-        if (mem.leadSent) saveMemory({ leadSent: false });
-        setTimeout(() => sleepViki(), 500);
+            setTimeout(() => sleepViki(), 500);
         };
 
         dc.onmessage = (e) => handleRealtimeEvent(JSON.parse(e.data));
@@ -1237,9 +1234,8 @@ function extractUserData(text) {
 
     // Enviar lead cuando tengamos email
     const mem = getMemory();
-    if (mem.email && !mem.leadSent) {
+    if (mem.email) {
         sendLead(mem);
-        saveMemory({ leadSent: true });
     }
 }
 
