@@ -1226,17 +1226,21 @@ function extractUserData(text) {
         const noAtMatch = normalizedText.match(/\b([a-zA-Z0-9._%+-]+)\.(gmail|hotmail|outlook|yahoo|icloud|immerso|fluge|me)\.(com|es|net|org|io|live)\b/i);
         if (noAtMatch) emailMatch = [`${noAtMatch[1]}@${noAtMatch[2]}.${noAtMatch[3]}`];
     }
-    if (emailMatch) saveMemory({ email: emailMatch[0] });
+    if (emailMatch) {
+        saveMemory({ email: emailMatch[0] });
+        // Solo enviar cuando detectamos email nuevo en este mensaje
+        const mem = getMemory();
+        const nameMatch2 = text.match(/(?:me llamo|soy|mi nombre es)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)/i);
+        if (nameMatch2) saveMemory({ name: nameMatch2[1] });
+        const companyMatch2 = text.match(/(?:trabajo en|soy de|mi empresa es|vengo de|represento a)\s+([\w\s&]+?)(?:[.,]|$)/i);
+        if (companyMatch2) saveMemory({ company: companyMatch2[1].trim() });
+        sendLead(getMemory());
+        return;
+    }
     const nameMatch = text.match(/(?:me llamo|soy|mi nombre es)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)/i);
     if (nameMatch) saveMemory({ name: nameMatch[1] });
     const companyMatch = text.match(/(?:trabajo en|soy de|mi empresa es|vengo de|represento a)\s+([\w\s&]+?)(?:[.,]|$)/i);
     if (companyMatch) saveMemory({ company: companyMatch[1].trim() });
-
-    // Enviar lead cuando tengamos email
-    const mem = getMemory();
-    if (mem.email) {
-        sendLead(mem);
-    }
 }
 
 async function sendLead(mem) {
