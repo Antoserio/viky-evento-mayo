@@ -770,6 +770,9 @@ function handleRealtimeEvent(event) {
                 Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });
                 applyIdleExpression();
                 console.log('⚡ Interrupción por usuario');
+                // Bloquear respuestas automáticas post-interrupción durante 800ms
+                window._blockNextResponse = true;
+                setTimeout(() => { window._blockNextResponse = false; }, 800);
             }
             speechStartTime = null;
             applyExpression('thinking');
@@ -791,9 +794,10 @@ function handleRealtimeEvent(event) {
         }
 
         case 'response.created':
-            if (!vikiAwake) {
-                // Dormida — cancelar respuesta que OpenAI generó automáticamente
+            if (!vikiAwake || window._blockNextResponse) {
+                // Dormida o post-interrupción — cancelar
                 sendRealtimeEvent({ type: 'response.cancel' });
+                window._blockNextResponse = false;
                 break;
             }
             lipsyncTimeline = [];
@@ -1219,11 +1223,12 @@ function addSessionMessage(role, content) {
 }
 function extractUserData(text) {
     // Normalizar "arroba" → "@"
-    const normalizedText = text.replace(/\sarroba\s/gi, "@").replace(/\sarroba/gi, "@");
+    const normalizedText = text.replace(/\sarroba\s/gi, "@").replace(/\sarroba/gi, "@").replace(/\spunto\s/gi, ".").replace(/\spunto/gi, ".");
     let emailMatch = normalizedText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
     if (!emailMatch) {
-        const noAtMatch = normalizedText.match(/\b([a-zA-Z0-9._%+-]+\.(?:gmail|hotmail|outlook|yahoo|icloud|immerso|fluge|me)\.[a-zA-Z]{2,})\b/i);
-        if (noAtMatch) emailMatch = [noAtMatch[0].replace(/(\w+\.)(\w+\.\w+)/, "$1@$2")];
+        // Detectar patron usuario.dominio.tld sin @ (ej: lorisotest1.gmail.com)
+        const noAtMatch = normalizedText.match(/\b([a-zA-Z0-9._%+-]+)\.(gmail|hotmail|outlook|yahoo|icloud|immerso|fluge|me)\.(com|es|net|org|io|live)\b/i);
+        if (noAtMatch) emailMatch = [`${noAtMatch[1]}@${noAtMatch[2]}.${noAtMatch[3]}`];
     }
     if (emailMatch) saveMemory({ email: emailMatch[0] });
     const nameMatch = text.match(/(?:me llamo|soy|mi nombre es)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)/i);
