@@ -29,7 +29,7 @@ exports.handler = async (event) => {
             method: 'POST',
             headers,
             body: JSON.stringify({
-                from: 'Viky IMMERSO <onboarding@resend.dev>',
+                from: 'Viky IMMERSO <viky@immerso.live>',
                 to: 'antonioloriso822@gmail.com',
                 subject: `🎯 Nuevo lead: ${nombre || 'Visitante'} — ${empresa || 'Sin empresa'}`,
                 html: htmlInterno,
@@ -53,7 +53,7 @@ exports.handler = async (event) => {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
-                    from: 'Viky IMMERSO <onboarding@resend.dev>',
+                    from: 'Viky IMMERSO <viky@immerso.live>',
                     to: email,
                     subject: `Gracias por tu interés en IMMERSO, ${nombre || ''}`,
                     html: htmlVisitante,
