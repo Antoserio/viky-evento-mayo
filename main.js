@@ -770,9 +770,6 @@ function handleRealtimeEvent(event) {
                 Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });
                 applyIdleExpression();
                 console.log('⚡ Interrupción por usuario');
-                // Bloquear respuestas automáticas post-interrupción durante 800ms
-                window._blockNextResponse = true;
-                setTimeout(() => { window._blockNextResponse = false; }, 800);
             }
             speechStartTime = null;
             applyExpression('thinking');
@@ -794,10 +791,9 @@ function handleRealtimeEvent(event) {
         }
 
         case 'response.created':
-            if (!vikiAwake || window._blockNextResponse) {
-                // Dormida o post-interrupción — cancelar
+            if (!vikiAwake) {
+                // Dormida — cancelar respuesta que OpenAI generó automáticamente
                 sendRealtimeEvent({ type: 'response.cancel' });
-                window._blockNextResponse = false;
                 break;
             }
             lipsyncTimeline = [];
