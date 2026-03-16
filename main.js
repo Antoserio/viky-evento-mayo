@@ -1222,8 +1222,8 @@ function extractUserData(text) {
     const normalizedText = text.replace(/\sarroba\s/gi, "@").replace(/\sarroba/gi, "@").replace(/\spunto\s/gi, ".").replace(/\spunto/gi, ".");
     let emailMatch = normalizedText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
     if (!emailMatch) {
-        // Detectar patron usuario.dominio.tld sin @ (ej: lorisotest1.gmail.com)
-        const noAtMatch = normalizedText.match(/\b([a-zA-Z0-9._%+-]+)\.(gmail|hotmail|outlook|yahoo|icloud|immerso|fluge|me)\.(com|es|net|org|io|live)\b/i);
+        // Detectar cualquier patron usuario.dominio.tld sin @ — funciona con cualquier empresa
+        const noAtMatch = normalizedText.match(/\b([a-zA-Z0-9._%+-]+)\.([a-zA-Z0-9-]+)\.(com|es|net|org|io|live|co|eu|info|biz)\b/i);
         if (noAtMatch) emailMatch = [`${noAtMatch[1]}@${noAtMatch[2]}.${noAtMatch[3]}`];
     }
     if (emailMatch) {
