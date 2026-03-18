@@ -610,10 +610,10 @@ EXCLUSIONES PRINCIPALES:
 
 [FLUJO DE CONTRATACIÓN]
 Cuando el cliente quiera contratar:
-1. En cuanto el cliente confirme que quiere contratar, di EXACTAMENTE esta frase y PARA: "Perfecto, te muestro el formulario ahora mismo." NO pidas ningún dato por voz. El formulario recoge todo.
-2. Si quiere información o que le llamen, di EXACTAMENTE: "Perfecto, te muestro el formulario de contacto ahora mismo." NO pidas datos por voz.
-3. NUNCA pidas nombre, email, teléfono, DNI ni ningún dato personal por voz. Todo se recoge en el formulario visual.
-4. Tras confirmar envío: "¡Listo! Tu póliza está activa y te llega toda la documentación al email. ¡Bienvenido a AXA!"
+1. Si el cliente quiere CONTRATAR: di EXACTAMENTE "Perfecto, te muestro el formulario ahora mismo." — PARA. No pidas ningún dato por voz.
+2. Si el cliente quiere que le LLAMEN o solo información: di EXACTAMENTE "Perfecto, te muestro el formulario de contacto ahora mismo." — PARA. No pidas datos.
+3. NUNCA pidas nombre, email, teléfono, DNI ni ningún dato por voz. Todo va en el formulario.
+4. Tras formulario enviado: "¡Listo! Todo enviado. ¡Bienvenido a AXA!"
 
 [FALLBACK]
 Si no tienes el dato exacto: "Para las condiciones específicas de tu caso lo mejor es que un asesor de AXA te contacte hoy mismo. ¿Te parece?"
@@ -773,9 +773,10 @@ function handleRealtimeEvent(event) {
                     applyEmotionFromText(reply);
                     if (!pendingVideoId) detectVideoPending(reply, true);
                     // Detectar si Viki activa el formulario de contratación
-                    const formTriggers = ['formulario', 'tus datos', 'rellena', 'domiciliación', 'iban', 'mandato sepa', 'te muestro'];
-                    if (formTriggers.some(w => reply.toLowerCase().includes(w))) {
+                    if (reply.toLowerCase().includes('te muestro el formulario ahora mismo')) {
                         setTimeout(() => showContractForm(), 800);
+                    } else if (reply.toLowerCase().includes('te muestro el formulario de contacto ahora mismo')) {
+                        setTimeout(() => showContactForm(), 800);
                     }
                 }
             }
@@ -855,20 +856,6 @@ function handleRealtimeEvent(event) {
 
         case 'response.audio_transcript.delta': {
             const deltaText = event.delta || '';
-            // Detectar triggers de formulario en tiempo real (sin esperar al final)
-            if (!window._formTriggered) {
-                const allDelta = (window._deltaBuffer || '') + deltaText.toLowerCase();
-                window._deltaBuffer = allDelta.slice(-60); // keep last 60 chars
-                if (allDelta.includes('te muestro el formulario ahora mismo')) {
-                    window._formTriggered = true;
-                    window._deltaBuffer = '';
-                    setTimeout(() => { showContractForm(); window._formTriggered = false; }, 300);
-                } else if (allDelta.includes('te muestro el formulario de contacto ahora mismo')) {
-                    window._formTriggered = true;
-                    window._deltaBuffer = '';
-                    setTimeout(() => { showContactForm(); window._formTriggered = false; }, 300);
-                }
-            }
             const newEntries = buildTimelineFromText(deltaText);
             if (newEntries.length > 0) {
                 const offset = lipsyncTimeline.length > 0
@@ -889,8 +876,6 @@ function handleRealtimeEvent(event) {
             lipsyncTimeline = [];
             lipsyncStartTime = null;
             loadingEl.classList.add('hidden');
-            window._deltaBuffer = '';
-            window._formTriggered = false;
             break;
 
         case 'error':
@@ -1819,6 +1804,96 @@ function injectContractFormStyles() {
     `;
     document.head.appendChild(style);
 }
+
+// =============================================================================
+// MINI FORMULARIO DE CONTACTO
+// =============================================================================
+window.showContactForm = function() { showContactForm(); };
+window.closeContactForm = function() { closeContactForm(); };
+window.submitContactForm = function() { submitContactForm(); };
+
+function showContactForm() {
+    injectContractFormStyles();
+    if (document.getElementById('axa-contact-form-overlay')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'axa-contact-form-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:999999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+    overlay.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:36px 40px;width:420px;max-width:95vw;box-shadow:0 20px 60px rgba(0,75,141,0.35);font-family:Arial,sans-serif;position:relative;">
+            <button onclick="closeContactForm()" style="position:absolute;top:16px;right:20px;background:none;border:none;font-size:22px;color:#999;cursor:pointer;">✕</button>
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;padding-bottom:18px;border-bottom:2px solid #004B8D;">
+                <img src="axa_logo.png" alt="AXA" style="height:40px;" onerror="this.style.display='none'"/>
+                <span style="font-size:18px;font-weight:bold;color:#004B8D;">Un asesor te contactará</span>
+            </div>
+            <p style="color:#666;font-size:13px;margin:0 0 20px 0;">Déjanos tus datos y te llamamos en menos de 24 horas.</p>
+            <div style="margin-bottom:14px;">
+                <label style="display:block;font-size:12px;font-weight:bold;color:#333;margin-bottom:5px;">Nombre *</label>
+                <input type="text" id="cc-nombre" placeholder="María García" style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none;" />
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block;font-size:12px;font-weight:bold;color:#333;margin-bottom:5px;">Teléfono *</label>
+                <input type="tel" id="cc-telefono" placeholder="600 000 000" style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none;" />
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block;font-size:12px;font-weight:bold;color:#333;margin-bottom:5px;">Email *</label>
+                <input type="email" id="cc-email" placeholder="maria@email.com" style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none;" />
+            </div>
+            <div style="margin-bottom:24px;">
+                <label style="display:block;font-size:12px;font-weight:bold;color:#333;margin-bottom:5px;">¿Qué seguro te interesa?</label>
+                <select id="cc-producto" style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none;">
+                    <option value="">— Selecciona —</option>
+                    <option>Seguro de Salud</option>
+                    <option>Seguro de Coche</option>
+                    <option>Seguro de Hogar</option>
+                    <option>Seguro de Vida</option>
+                    <option>Varios / No sé aún</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:12px;">
+                <button onclick="closeContactForm()" style="background:transparent;border:1.5px solid #ccc;border-radius:10px;padding:14px 20px;font-size:14px;color:#666;cursor:pointer;">Cancelar</button>
+                <button onclick="submitContactForm()" id="cc-submit-btn" style="flex:1;background:#004B8D;color:white;border:none;border-radius:10px;padding:14px;font-size:16px;font-weight:bold;cursor:pointer;">📞 Solicitar llamada</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+function closeContactForm() {
+    const el = document.getElementById('axa-contact-form-overlay');
+    if (el) el.remove();
+}
+
+async function submitContactForm() {
+    const nombre = document.getElementById('cc-nombre')?.value.trim();
+    const telefono = document.getElementById('cc-telefono')?.value.trim();
+    const email = document.getElementById('cc-email')?.value.trim();
+    const producto = document.getElementById('cc-producto')?.value;
+    if (!nombre || !telefono || !email) { alert('Por favor, rellena nombre, teléfono y email.'); return; }
+    const btn = document.getElementById('cc-submit-btn');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    try {
+        const res = await fetch('/.netlify/functions/send-contact-lead', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, telefono, email, producto })
+        });
+        if (res.ok) {
+            document.querySelector('#axa-contact-form-overlay > div').innerHTML = \`
+                <div style="text-align:center;padding:20px 0;">
+                    <div style="font-size:56px;margin-bottom:12px;">✅</div>
+                    <h3 style="color:#004B8D;font-size:22px;margin:0 0 8px 0;">¡Perfecto, \${nombre}!</h3>
+                    <p style="color:#555;font-size:14px;">Un asesor de AXA te contactará pronto en el <strong>\${telefono}</strong>.</p>
+                    <button onclick="closeContactForm()" style="margin-top:20px;background:#004B8D;color:white;border:none;border-radius:8px;padding:12px 28px;font-size:15px;cursor:pointer;">Cerrar</button>
+                </div>\`;
+            sendRealtimeEvent({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: \`\${nombre} ha dejado sus datos de contacto. Teléfono: \${telefono}. Seguro de interés: \${producto || 'no especificado'}. Confírmale calurosamente que un asesor le llamará pronto.\` }] } });
+            sendRealtimeEvent({ type: 'response.create' });
+        } else { throw new Error('Error servidor'); }
+    } catch(e) {
+        btn.disabled = false; btn.textContent = '📞 Solicitar llamada';
+        alert('Error al enviar. Inténtalo de nuevo.');
+    }
+}
+
 
 window.showContractForm = function() { showContractForm(); };
 window.closeContractForm = function() { closeContractForm(); };
