@@ -1942,8 +1942,9 @@ async function submitContractForm() {
     // Número de póliza simulado
     const poliza = 'AXA-DEMO-' + Math.floor(Math.random() * 9000000 + 1000000);
     const fechaEfecto = new Date();
-    fechaEfecto.setDate(fechaEfecto.getDate() + 1);
-    const fechaStr = fechaEfecto.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+fechaEfecto.setDate(fechaEfecto.getDate() + 1);
+const fechaStr = fechaEfecto.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const fechaHablada = fechaEfecto.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
 
     try {
         const res = await fetch('/.netlify/functions/send-contract', {
@@ -1968,7 +1969,7 @@ async function submitContractForm() {
             // Decirle a Viki que confirme
             sendRealtimeEvent({
                 type: 'conversation.item.create',
-                item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: `El formulario ha sido enviado correctamente. El cliente ${nombre} ha contratado ${producto} con número de póliza ${poliza} y fecha de efecto ${fechaStr}. Confírmalo de forma cálida y entusiasta.` }] }
+                item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: `El formulario ha sido enviado correctamente. El cliente ${nombre} ha contratado ${producto} con número de póliza ${poliza} y fecha de efecto ${fechaHablada}. Confírmalo de forma cálida y entusiasta.` }] }
             });
             sendRealtimeEvent({ type: 'response.create' });
         } else {
