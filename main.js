@@ -329,7 +329,7 @@ let speechStartTime = null; // para medir duración antes de interrumpir
 // =============================================================================
 let vikiAwake = false;          // false = dormida, true = activa
 let wakeWordTimer = null;       // timeout para volver a dormida
-const WAKE_TIMEOUT_MS = 45000;  // 45 segundos
+const WAKE_TIMEOUT_MS = 300000;  // 5 minutos
 const WAKE_WORDS = ['viki', 'vicky', 'viqui', 'wiki'];
 
 function activateViki() {
@@ -610,7 +610,7 @@ EXCLUSIONES PRINCIPALES:
 
 [FLUJO DE CONTRATACIÓN]
 Cuando el cliente quiera contratar:
-1. "Perfecto, [producto] es justo lo que necesitas. Te muestro en pantalla un formulario seguro para tus datos."
+1. En cuanto el cliente confirme que quiere contratar, di EXACTAMENTE: "Perfecto, te muestro el formulario ahora mismo." — nada más. No hagas más preguntas.
 2. Recoger: nombre, apellidos, DNI, fecha nacimiento, email, teléfono, código postal, producto/modalidad.
 3. Pago SEPA: "El pago es por domiciliación bancaria. Introduces tú el IBAN en el formulario seguro — yo nunca lo veo. Solo confirmas el mandato SEPA con una casilla."
 4. "¡Listo! Póliza activa. Te llega toda la documentación al email. Bienvenido a AXA."
