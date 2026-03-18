@@ -868,10 +868,11 @@ function handleRealtimeEvent(event) {
         }
 
         case 'response.created':
-            if (!vikiAwake) {
-                // Dormida — cancelar respuesta que OpenAI generó automáticamente
-                sendRealtimeEvent({ type: 'response.cancel' });
-                break;
+    console.log('🔵 response.created, vikiAwake:', vikiAwake);
+    if (!vikiAwake) {
+        // Dormida — cancelar respuesta que OpenAI generó automáticamente
+        sendRealtimeEvent({ type: 'response.cancel' });
+        break;
             }
             lipsyncTimeline = [];
             lipsyncStartTime = null;
