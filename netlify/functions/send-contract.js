@@ -21,7 +21,7 @@ exports.handler = async (event) => {
             <!-- HEADER AXA -->
             <tr>
               <td style="background:#004B8D;padding:28px 40px;text-align:left;">
-                <div style="color:#ffffff;font-size:32px;font-weight:bold;letter-spacing:2px;">AXA</div>
+                <img src="https://www.axa.es/documents/776357/0/logo-axa-blanco.svg" alt="AXA" style="height:45px;" onerror="this.style.display='none'"/>
                 <div style="color:#B0D8F8;font-size:13px;margin-top:4px;">Seguros · Ahorro · Inversión</div>
               </td>
             </tr>
