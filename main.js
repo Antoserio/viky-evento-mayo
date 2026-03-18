@@ -773,7 +773,7 @@ function handleRealtimeEvent(event) {
                     applyEmotionFromText(reply);
                     if (!pendingVideoId) detectVideoPending(reply, true);
                     // Detectar si Viki activa el formulario de contratación
-                    const formTriggers = ['formulario', 'tus datos', 'rellena', 'domiciliación', 'iban', 'mandato sepa', 'te muestro'];
+                    const formTriggers = ['te muestro el formulario', 'abriendo el formulario', 'aquí tienes el formulario', 'rellena el formulario', 'completa el formulario'];
                     if (formTriggers.some(w => reply.toLowerCase().includes(w))) {
                         setTimeout(() => showContractForm(), 800);
                     }
