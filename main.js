@@ -846,7 +846,6 @@ function handleRealtimeEvent(event) {
                 applyIdleExpression();
                 console.log('⚡ Interrupción por usuario');
                 resetWakeTimer();
-           
             }
             speechStartTime = null;
             applyExpression('thinking');
