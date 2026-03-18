@@ -1878,14 +1878,14 @@ async function submitContactForm() {
             body: JSON.stringify({ nombre, telefono, email, producto })
         });
         if (res.ok) {
-            document.querySelector('#axa-contact-form-overlay > div').innerHTML = \`
+            document.querySelector('#axa-contact-form-overlay > div').innerHTML = `
                 <div style="text-align:center;padding:20px 0;">
                     <div style="font-size:56px;margin-bottom:12px;">✅</div>
-                    <h3 style="color:#004B8D;font-size:22px;margin:0 0 8px 0;">¡Perfecto, \${nombre}!</h3>
-                    <p style="color:#555;font-size:14px;">Un asesor de AXA te contactará pronto en el <strong>\${telefono}</strong>.</p>
+                    <h3 style="color:#004B8D;font-size:22px;margin:0 0 8px 0;">¡Perfecto, ${nombre}!</h3>
+                    <p style="color:#555;font-size:14px;">Un asesor de AXA te contactará pronto en el <strong>${telefono}</strong>.</p>
                     <button onclick="closeContactForm()" style="margin-top:20px;background:#004B8D;color:white;border:none;border-radius:8px;padding:12px 28px;font-size:15px;cursor:pointer;">Cerrar</button>
-                </div>\`;
-            sendRealtimeEvent({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: \`\${nombre} ha dejado sus datos de contacto. Teléfono: \${telefono}. Seguro de interés: \${producto || 'no especificado'}. Confírmale calurosamente que un asesor le llamará pronto.\` }] } });
+                </div>`;
+            sendRealtimeEvent({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: \`${nombre} ha dejado sus datos de contacto. Teléfono: ${telefono}. Seguro de interés: \${producto || 'no especificado'}. Confírmale calurosamente que un asesor le llamará pronto.\` }] } });
             sendRealtimeEvent({ type: 'response.create' });
         } else { throw new Error('Error servidor'); }
     } catch(e) {
