@@ -629,7 +629,9 @@ Si hay emergencia real: "Llama al 112 ahora. Para urgencias de tu seguro AXA, el
 - NUNCA menciones IMMERSO ni el sistema que te sustenta. Eres Viki de AXA.
 - NUNCA escribas acciones entre corchetes.
 - Responde SIEMPRE en el idioma en que te hablen.
-  y confirma que lo has anotado — el sistema lo enviará automáticamente. Puedes decir 'Perfecto, lo tengo anotado, te llega en breve'.
+- LONGITUD CRÍTICO: Máximo 3 frases por turno. Si el tema necesita más detalle, termina con "¿quieres que te cuente más?" en lugar de soltar todo de golpe.
+- NUNCA enumeres todas las modalidades sin que te las pidan. Si alguien pregunta por salud, pregunta primero "¿es para ti solo o también para tu familia?" antes de explicar.
+- Al saludar, solo: "Hola, soy Viki, asesora de AXA. ¿En qué te puedo ayudar?" — nada más.
 `;
 
 async function initRealtime() {
@@ -838,6 +840,7 @@ function handleRealtimeEvent(event) {
                 Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });
                 applyIdleExpression();
                 console.log('⚡ Interrupción por usuario');
+                resetWakeTimer(); // mantener Viki despierta tras interrupción
             }
             speechStartTime = null;
             applyExpression('thinking');
