@@ -773,7 +773,7 @@ function handleRealtimeEvent(event) {
                     applyEmotionFromText(reply);
                     if (!pendingVideoId) detectVideoPending(reply, true);
                     // Detectar si Viki activa el formulario de contratación
-                    const formTriggers = ['te muestro el formulario', 'abriendo el formulario', 'aquí tienes el formulario', 'rellena el formulario', 'completa el formulario'];
+                    const formTriggers = ['formulario', 'tus datos', 'rellena', 'domiciliación', 'iban', 'mandato sepa', 'te muestro'];
                     if (formTriggers.some(w => reply.toLowerCase().includes(w))) {
                         setTimeout(() => showContractForm(), 800);
                     }
@@ -1942,9 +1942,8 @@ async function submitContractForm() {
     // Número de póliza simulado
     const poliza = 'AXA-DEMO-' + Math.floor(Math.random() * 9000000 + 1000000);
     const fechaEfecto = new Date();
-fechaEfecto.setDate(fechaEfecto.getDate() + 1);
-const fechaStr = fechaEfecto.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-const fechaHablada = fechaEfecto.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+    fechaEfecto.setDate(fechaEfecto.getDate() + 1);
+    const fechaStr = fechaEfecto.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
     try {
         const res = await fetch('/.netlify/functions/send-contract', {
@@ -1969,7 +1968,7 @@ const fechaHablada = fechaEfecto.toLocaleDateString('es-ES', { day: 'numeric', m
             // Decirle a Viki que confirme
             sendRealtimeEvent({
                 type: 'conversation.item.create',
-                item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: `El formulario ha sido enviado correctamente. El cliente ${nombre} ha contratado ${producto} con número de póliza ${poliza} y fecha de efecto ${fechaHablada}. Confírmalo de forma cálida y entusiasta.` }] }
+                item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: `El formulario ha sido enviado correctamente. El cliente ${nombre} ha contratado ${producto} con número de póliza ${poliza} y fecha de efecto ${fechaStr}. Confírmalo de forma cálida y entusiasta.` }] }
             });
             sendRealtimeEvent({ type: 'response.create' });
         } else {
