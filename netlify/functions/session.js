@@ -1,3 +1,5 @@
+const { VIKY_IDENTITY } = require('./identity');
+
 exports.handler = async () => {
     try {
         const response = await fetch('https://api.openai.com/v1/realtime/sessions', {
@@ -9,6 +11,7 @@ exports.handler = async () => {
             body: JSON.stringify({
                 model: 'gpt-4o-realtime-preview-2024-12-17',
                 voice: 'shimmer',
+                instructions: VIKY_IDENTITY,
             }),
         });
 
