@@ -845,13 +845,13 @@ function handleRealtimeEvent(event) {
                 Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });
                 applyIdleExpression();
                 console.log('⚡ Interrupción por usuario');
-                resetWakeTimer();
-                setTimeout(() => {
-                    if (vikiAwake && !isSpeaking) {
-                        sendRealtimeEvent({ type: 'response.create' });
-                    }
-                }, 1200);
-            }
+resetWakeTimer();
+// Tras interrupción, dejar que el usuario termine y luego responder
+setTimeout(() => {
+    if (vikiAwake && !isSpeaking) {
+        sendRealtimeEvent({ type: 'response.create' });
+    }
+}, 1200);
             speechStartTime = null;
             applyExpression('thinking');
             loadingEl.classList.remove('hidden');
@@ -1621,7 +1621,7 @@ function injectContractFormStyles() {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0, 0, 0, 0.75);
-            z-index: 9999;
+            z-index: 999999;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1809,6 +1809,12 @@ function injectContractFormStyles() {
     document.head.appendChild(style);
 }
 
+// Exponer funciones al scope global (necesario por type="module")
+window.showContractForm = function() { showContractForm(); };
+window.closeContractForm = function() { closeContractForm(); };
+window.formatIBAN = function(input) { formatIBAN(input); };
+window.submitContractForm = function() { submitContractForm(); };
+
 function showContractForm() {
     injectContractFormStyles();
     if (document.getElementById('axa-contract-overlay')) return;
@@ -1905,10 +1911,6 @@ function showContractForm() {
     `;
     document.body.appendChild(overlay);
 
-    // Cerrar al hacer clic fuera
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) closeContractForm();
-    });
 }
 
 function closeContractForm() {
