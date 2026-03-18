@@ -1885,7 +1885,8 @@ async function submitContactForm() {
                     <p style="color:#555;font-size:14px;">Un asesor de AXA te contactará pronto en el <strong>${telefono}</strong>.</p>
                     <button onclick="closeContactForm()" style="margin-top:20px;background:#004B8D;color:white;border:none;border-radius:8px;padding:12px 28px;font-size:15px;cursor:pointer;">Cerrar</button>
                 </div>`;
-            sendRealtimeEvent({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: \`${nombre} ha dejado sus datos de contacto. Teléfono: ${telefono}. Seguro de interés: \${producto || 'no especificado'}. Confírmale calurosamente que un asesor le llamará pronto.\` }] } });
+            const msgContacto = nombre + ' ha dejado sus datos de contacto. Teléfono: ' + telefono + '. Seguro de interés: ' + (producto || 'no especificado') + '. Confírmale calurosamente que un asesor le llamará pronto.';
+            sendRealtimeEvent({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: msgContacto }] } });
             sendRealtimeEvent({ type: 'response.create' });
         } else { throw new Error('Error servidor'); }
     } catch(e) {
