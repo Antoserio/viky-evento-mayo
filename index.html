@@ -1,27 +1,25 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Viki Avatar - IMMERSO x Girasomnis</title>
+    <title>Viki - Asesora Virtual AXA</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-
 <body>
     <div id="canvas-container"></div>
 
-    <!-- Logo Girasomnis — cuello de Viki, superpuesto sobre canvas -->
+    <!-- Logo AXA — posición equivalente al logo Girasomnis anterior -->
     <div id="logo-girasomnis-wrap">
-        <img src="girasomnis_logo.svg" alt="Girasomnis" id="logo-girasomnis" />
+        <img src="axa_logo.svg" alt="AXA" id="logo-girasomnis" />
     </div>
 
     <div id="ui-container">
-        <img src="logo2.png" alt="IMMERSO" id="logo-immerso" />
+        <img src="axa_logo.svg" alt="AXA" id="logo-immerso" />
         <button id="mic-btn">🎙️</button>
         <button id="pdf-btn" class="hidden" title="Descargar conversación PDF">📄</button>
-        <textarea id="chat-input" placeholder="Escribe o habla..."></textarea>
+        <textarea id="chat-input" placeholder="Escribe o habla con Viki..."></textarea>
         <button id="send-btn">Enviar</button>
     </div>
 
@@ -31,7 +29,7 @@
     <!-- VIDEO PANEL -->
     <div id="video-panel" class="hidden">
         <div id="video-header">
-            <span id="video-label">Proyecto Fluge</span>
+            <span id="video-label">AXA</span>
             <button id="video-close">✕</button>
         </div>
         <div id="video-content">
@@ -39,10 +37,9 @@
         </div>
     </div>
 
-    <!-- MediaPipe Face Detection para seguimiento de mirada -->
+    <!-- MediaPipe Face Detection -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"
         crossorigin="anonymous"></script>
-
     <script type="importmap">
         {
             "imports": {
@@ -53,5 +50,4 @@
     </script>
     <script type="module" src="main.js"></script>
 </body>
-
 </html>
