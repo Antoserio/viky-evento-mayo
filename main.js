@@ -845,8 +845,13 @@ function handleRealtimeEvent(event) {
                 Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });
                 applyIdleExpression();
                 console.log('⚡ Interrupción por usuario');
-                resetWakeTimer(); // mantener Viki despierta tras interrupción
-            }
+resetWakeTimer();
+// Tras interrupción, dejar que el usuario termine y luego responder
+setTimeout(() => {
+    if (vikiAwake && !isSpeaking) {
+        sendRealtimeEvent({ type: 'response.create' });
+    }
+}, 1200);
             speechStartTime = null;
             applyExpression('thinking');
             loadingEl.classList.remove('hidden');
