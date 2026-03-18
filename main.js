@@ -772,6 +772,11 @@ function handleRealtimeEvent(event) {
                     showPdfBtn();
                     applyEmotionFromText(reply);
                     if (!pendingVideoId) detectVideoPending(reply, true);
+                    // Detectar si Viki activa el formulario de contratación
+                    const formTriggers = ['formulario', 'tus datos', 'rellena', 'domiciliación', 'iban', 'mandato sepa', 'te muestro'];
+                    if (formTriggers.some(w => reply.toLowerCase().includes(w))) {
+                        setTimeout(() => showContractForm(), 800);
+                    }
                 }
             }
             break;
@@ -1597,3 +1602,386 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
 });
+
+// =============================================================================
+// FORMULARIO DE CONTRATACIÓN AXA
+// =============================================================================
+
+function injectContractFormStyles() {
+    if (document.getElementById('axa-form-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'axa-form-styles';
+    style.textContent = `
+        #axa-contract-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        #axa-contract-panel {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 36px 40px;
+            width: 520px;
+            max-width: 95vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,75,141,0.35);
+            font-family: Arial, sans-serif;
+            position: relative;
+        }
+        #axa-contract-panel .axa-logo-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+            padding-bottom: 18px;
+            border-bottom: 2px solid #004B8D;
+        }
+        #axa-contract-panel .axa-logo-header img {
+            height: 40px;
+        }
+        #axa-contract-panel .axa-logo-header span {
+            font-size: 18px;
+            font-weight: bold;
+            color: #004B8D;
+        }
+        #axa-contract-panel h2 {
+            color: #004B8D;
+            font-size: 20px;
+            margin: 0 0 6px 0;
+        }
+        #axa-contract-panel p.subtitle {
+            color: #666;
+            font-size: 13px;
+            margin: 0 0 24px 0;
+        }
+        #axa-contract-panel .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+        #axa-contract-panel .form-row.full {
+            grid-template-columns: 1fr;
+        }
+        #axa-contract-panel label {
+            display: block;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        #axa-contract-panel input,
+        #axa-contract-panel select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        #axa-contract-panel input:focus,
+        #axa-contract-panel select:focus {
+            border-color: #004B8D;
+        }
+        #axa-contract-panel .sepa-box {
+            background: #f0f7ff;
+            border: 1.5px solid #004B8D;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin: 18px 0;
+            font-size: 13px;
+            color: #333;
+        }
+        #axa-contract-panel .sepa-box strong {
+            color: #004B8D;
+        }
+        #axa-contract-panel .sepa-check {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #555;
+            cursor: pointer;
+        }
+        #axa-contract-panel .sepa-check input[type=checkbox] {
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            margin-top: 1px;
+            cursor: pointer;
+        }
+        #axa-contract-panel .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        #axa-contract-panel .btn-submit {
+            flex: 1;
+            background: #004B8D;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #axa-contract-panel .btn-submit:hover {
+            background: #003a6e;
+        }
+        #axa-contract-panel .btn-submit:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+        #axa-contract-panel .btn-cancel {
+            background: transparent;
+            border: 1.5px solid #ccc;
+            border-radius: 10px;
+            padding: 14px 20px;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+        }
+        #axa-contract-panel .btn-cancel:hover {
+            border-color: #999;
+        }
+        #axa-contract-panel .close-btn {
+            position: absolute;
+            top: 16px; right: 20px;
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #999;
+            cursor: pointer;
+        }
+        #axa-contract-panel .success-msg {
+            text-align: center;
+            padding: 20px 0;
+        }
+        #axa-contract-panel .success-msg .check-icon {
+            font-size: 56px;
+            margin-bottom: 12px;
+        }
+        #axa-contract-panel .success-msg h3 {
+            color: #004B8D;
+            font-size: 22px;
+            margin: 0 0 8px 0;
+        }
+        #axa-contract-panel .success-msg p {
+            color: #555;
+            font-size: 14px;
+        }
+        #contract-form-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 24px;
+            background: #004B8D;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 22px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,75,141,0.4);
+            font-family: Arial, sans-serif;
+        }
+        #contract-form-btn:hover {
+            background: #003a6e;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function showContractForm() {
+    injectContractFormStyles();
+    if (document.getElementById('axa-contract-overlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'axa-contract-overlay';
+    overlay.innerHTML = `
+        <div id="axa-contract-panel">
+            <button class="close-btn" onclick="closeContractForm()">✕</button>
+            <div class="axa-logo-header">
+                <img src="axa_logo.png" alt="AXA" onerror="this.style.display='none'"/>
+                <span>Contratación de Seguro</span>
+            </div>
+            <h2>¡Casi listo!</h2>
+            <p class="subtitle">Rellena tus datos y tu póliza estará activa en minutos.</p>
+
+            <div class="form-row">
+                <div>
+                    <label>Nombre *</label>
+                    <input type="text" id="cf-nombre" placeholder="María" />
+                </div>
+                <div>
+                    <label>Apellidos *</label>
+                    <input type="text" id="cf-apellidos" placeholder="García López" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label>DNI / NIE *</label>
+                    <input type="text" id="cf-dni" placeholder="12345678A" />
+                </div>
+                <div>
+                    <label>Fecha de nacimiento *</label>
+                    <input type="date" id="cf-nacimiento" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label>Email *</label>
+                    <input type="email" id="cf-email" placeholder="maria@email.com" />
+                </div>
+                <div>
+                    <label>Teléfono *</label>
+                    <input type="tel" id="cf-telefono" placeholder="600 000 000" />
+                </div>
+            </div>
+            <div class="form-row full">
+                <div>
+                    <label>Producto seleccionado *</label>
+                    <select id="cf-producto">
+                        <option value="">— Selecciona un seguro —</option>
+                        <optgroup label="Salud">
+                            <option>Óptima Smart</option>
+                            <option>Óptima (sin copago)</option>
+                            <option>Óptima Familiar S</option>
+                            <option>Óptima Familiar M</option>
+                            <option>Óptima Familiar L</option>
+                            <option>Óptima Plus</option>
+                        </optgroup>
+                        <optgroup label="Coche">
+                            <option>Motor Elige — Terceros Básico</option>
+                            <option>Motor Elige — Terceros Ampliado</option>
+                            <option>Motor Elige — Todo Riesgo con franquicia</option>
+                            <option>Motor Elige — Todo Riesgo sin franquicia</option>
+                        </optgroup>
+                        <optgroup label="Hogar">
+                            <option>Hogar Único</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sepa-box">
+                <strong>💳 Domiciliación bancaria (SEPA)</strong>
+                <p style="margin:6px 0 0 0; font-size:12px;">El cobro de tu seguro se realizará mediante adeudo directo SEPA. Introduce tu IBAN de forma segura:</p>
+                <div style="margin-top:10px;">
+                    <label>IBAN *</label>
+                    <input type="text" id="cf-iban" placeholder="ES00 0000 0000 0000 0000 0000" 
+                        oninput="formatIBAN(this)" maxlength="29" style="font-family:monospace; letter-spacing:1px;" />
+                </div>
+                <label class="sepa-check">
+                    <input type="checkbox" id="cf-sepa" />
+                    <span>Autorizo a AXA Seguros Generales S.A. a cargar en la cuenta indicada los recibos correspondientes a mi póliza (Mandato SEPA).</span>
+                </label>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-cancel" onclick="closeContractForm()">Cancelar</button>
+                <button class="btn-submit" id="cf-submit-btn" onclick="submitContractForm()">
+                    ✅ Confirmar y activar póliza
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Cerrar al hacer clic fuera
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeContractForm();
+    });
+}
+
+function closeContractForm() {
+    const overlay = document.getElementById('axa-contract-overlay');
+    if (overlay) overlay.remove();
+}
+
+function formatIBAN(input) {
+    let val = input.value.replace(/\s/g, '').toUpperCase();
+    let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
+    input.value = formatted;
+}
+
+async function submitContractForm() {
+    const nombre = document.getElementById('cf-nombre')?.value.trim();
+    const apellidos = document.getElementById('cf-apellidos')?.value.trim();
+    const dni = document.getElementById('cf-dni')?.value.trim();
+    const nacimiento = document.getElementById('cf-nacimiento')?.value;
+    const email = document.getElementById('cf-email')?.value.trim();
+    const telefono = document.getElementById('cf-telefono')?.value.trim();
+    const producto = document.getElementById('cf-producto')?.value;
+    const iban = document.getElementById('cf-iban')?.value.trim();
+    const sepa = document.getElementById('cf-sepa')?.checked;
+
+    if (!nombre || !apellidos || !email || !producto || !iban || !sepa) {
+        alert('Por favor, rellena todos los campos obligatorios y acepta el mandato SEPA.');
+        return;
+    }
+
+    const btn = document.getElementById('cf-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    // Número de póliza simulado
+    const poliza = 'AXA-DEMO-' + Math.floor(Math.random() * 9000000 + 1000000);
+    const fechaEfecto = new Date();
+    fechaEfecto.setDate(fechaEfecto.getDate() + 1);
+    const fechaStr = fechaEfecto.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    try {
+        const res = await fetch('/.netlify/functions/send-contract', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, apellidos, dni, nacimiento, email, telefono, producto, iban, poliza, fechaEfecto: fechaStr })
+        });
+
+        if (res.ok) {
+            // Mostrar éxito
+            document.getElementById('axa-contract-panel').innerHTML = `
+                <div class="success-msg">
+                    <div class="check-icon">✅</div>
+                    <h3>¡Bienvenido/a a AXA, ${nombre}!</h3>
+                    <p>Tu póliza <strong>${producto}</strong> está activa.<br/>
+                    Nº de póliza: <strong>${poliza}</strong><br/>
+                    Fecha de efecto: <strong>${fechaStr}</strong><br/><br/>
+                    Hemos enviado toda la documentación a <strong>${email}</strong>.</p>
+                    <button onclick="closeContractForm()" style="margin-top:20px; background:#004B8D; color:white; border:none; border-radius:8px; padding:12px 28px; font-size:15px; cursor:pointer;">Cerrar</button>
+                </div>
+            `;
+            // Decirle a Viki que confirme
+            sendRealtimeEvent({
+                type: 'conversation.item.create',
+                item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: `El formulario ha sido enviado correctamente. El cliente ${nombre} ha contratado ${producto} con número de póliza ${poliza} y fecha de efecto ${fechaStr}. Confírmalo de forma cálida y entusiasta.` }] }
+            });
+            sendRealtimeEvent({ type: 'response.create' });
+        } else {
+            throw new Error('Error en el servidor');
+        }
+    } catch (e) {
+        btn.disabled = false;
+        btn.textContent = '✅ Confirmar y activar póliza';
+        alert('Error al enviar. Inténtalo de nuevo.');
+    }
+}
+
+// Botón manual visible siempre (por si Viki no lo activa automáticamente)
+const contractBtn = document.createElement('button');
+contractBtn.id = 'contract-form-btn';
+contractBtn.textContent = '📋 Contratar';
+contractBtn.onclick = showContractForm;
+document.body.appendChild(contractBtn);
