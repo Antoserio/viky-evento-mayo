@@ -846,11 +846,7 @@ function handleRealtimeEvent(event) {
                 applyIdleExpression();
                 console.log('⚡ Interrupción por usuario');
                 resetWakeTimer();
-                setTimeout(() => {
-                    if (vikiAwake && !isSpeaking) {
-                        sendRealtimeEvent({ type: 'response.create' });
-                    }
-                }, 1200);
+           
             }
             speechStartTime = null;
             applyExpression('thinking');
