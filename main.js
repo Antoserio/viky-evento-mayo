@@ -845,13 +845,13 @@ function handleRealtimeEvent(event) {
                 Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });
                 applyIdleExpression();
                 console.log('⚡ Interrupción por usuario');
-resetWakeTimer();
-// Tras interrupción, dejar que el usuario termine y luego responder
-setTimeout(() => {
-    if (vikiAwake && !isSpeaking) {
-        sendRealtimeEvent({ type: 'response.create' });
-    }
-}, 1200);
+                resetWakeTimer();
+                setTimeout(() => {
+                    if (vikiAwake && !isSpeaking) {
+                        sendRealtimeEvent({ type: 'response.create' });
+                    }
+                }, 1200);
+            }
             speechStartTime = null;
             applyExpression('thinking');
             loadingEl.classList.remove('hidden');
@@ -1809,7 +1809,6 @@ function injectContractFormStyles() {
     document.head.appendChild(style);
 }
 
-// Exponer funciones al scope global (necesario por type="module")
 window.showContractForm = function() { showContractForm(); };
 window.closeContractForm = function() { closeContractForm(); };
 window.formatIBAN = function(input) { formatIBAN(input); };
