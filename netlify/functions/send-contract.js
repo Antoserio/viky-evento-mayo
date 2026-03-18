@@ -4,7 +4,7 @@ exports.handler = async (event) => {
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
     if (!RESEND_API_KEY) return { statusCode: 500, body: JSON.stringify({ error: 'Missing RESEND_API_KEY' }) };
 
-    const { nombre, apellidos, dni, nacimiento, email, telefono, producto, iban, poliza, fechaEfecto } = JSON.parse(event.body);
+    const { nombre, apellidos, dni, nacimiento, email, telefono, producto, iban, poliza, fechaEfecto, codigoPostal, direccion } = JSON.parse(event.body);
     const nombreCompleto = `${nombre} ${apellidos}`;
     const ibanOculto = iban.replace(/\S(?=\S{4})/g, '*');
 
@@ -115,6 +115,8 @@ exports.handler = async (event) => {
           <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 0;color:#888;">Producto</td><td style="padding:8px 0;color:#004B8D;"><strong>${producto}</strong></td></tr>
           <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 0;color:#888;">IBAN</td><td style="padding:8px 0;color:#333;font-family:monospace;">${iban}</td></tr>
           <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 0;color:#888;">Nº Póliza</td><td style="padding:8px 0;color:#004B8D;"><strong>${poliza}</strong></td></tr>
+          <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 0;color:#888;">Código postal</td><td style="padding:8px 0;color:#333;">${codigoPostal || '—'}</td></tr>
+          <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 0;color:#888;">Dirección</td><td style="padding:8px 0;color:#333;">${direccion || '—'}</td></tr>
           <tr><td style="padding:8px 0;color:#888;">Fecha efecto</td><td style="padding:8px 0;color:#333;">${fechaEfecto}</td></tr>
         </table>
         <p style="margin:20px 0 0 0;font-size:12px;color:#aaa;">Demo Viki × AXA · IMMERSO · immerso.live</p>
@@ -128,7 +130,7 @@ exports.handler = async (event) => {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                from: 'Viki AXA <onboarding@resend.dev>',
+                from: 'Viki AXA <viki@immerso.live>',
                 to: [email],
                 subject: `Bienvenido/a a AXA — Tu póliza ${producto} está activa`,
                 html: emailCliente
@@ -140,8 +142,8 @@ exports.handler = async (event) => {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                from: 'Viki AXA <onboarding@resend.dev>',
-                to: ['antonioloriso822@gmail.com'],
+                from: 'Viki AXA <viki@immerso.live>',
+                to: ['info@immerso.live'],
                 subject: `🎉 Nueva contratación AXA Demo — ${nombreCompleto} · ${producto}`,
                 html: emailInterno
             })
