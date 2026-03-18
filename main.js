@@ -1983,10 +1983,3 @@ async function submitContractForm() {
         alert('Error al enviar. Inténtalo de nuevo.');
     }
 }
-
-// Botón manual visible siempre (por si Viki no lo activa automáticamente)
-const contractBtn = document.createElement('button');
-contractBtn.id = 'contract-form-btn';
-contractBtn.textContent = '📋 Contratar';
-contractBtn.onclick = showContractForm;
-document.body.appendChild(contractBtn);
