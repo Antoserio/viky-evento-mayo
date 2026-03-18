@@ -141,7 +141,7 @@ exports.handler = async (event) => {
             headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 from: 'Viki AXA <onboarding@resend.dev>',
-                to: ['info@immerso.live'],
+                to: ['antonioloriso822@gmail.com'],
                 subject: `🎉 Nueva contratación AXA Demo — ${nombreCompleto} · ${producto}`,
                 html: emailInterno
             })
