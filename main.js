@@ -71,8 +71,8 @@ document.getElementById('canvas-container').appendChild(renderer.domElement);
 // --- POST-PROCESSING ---
 const renderScene = new RenderPass(scene, camera);
 const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.6, 0.4, 0.85);
-bloomPass.threshold = 0.85;
-bloomPass.strength = 0.3;
+bloomPass.threshold = 0.9;
+bloomPass.strength = 0.2;
 bloomPass.radius = 0.4;
 const outputPass = new OutputPass();
 const composer = new EffectComposer(renderer);
@@ -1715,7 +1715,7 @@ function animate() {
     updateFallingParticles();
     updateGaze(1 / 60);
     controls.update();
-    bloomPass.strength = isSpeaking ? 0.5 + Math.sin(time * 8) * 0.06 : 0.3 + Math.sin(time * 1.5) * 0.03;
+    bloomPass.strength = isSpeaking ? 0.35 + Math.sin(time * 8) * 0.04 : 0.2 + Math.sin(time * 1.5) * 0.02;
     composer.render();
 }
 animate();
