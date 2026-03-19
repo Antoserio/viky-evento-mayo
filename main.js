@@ -85,13 +85,13 @@ controls.enableDamping = true;
 controls.target.set(0, 0, 0);
 
 // Luces
-const ambLight = new THREE.AmbientLight(0x5588bb, 1.2);
+const ambLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambLight);
 const faceLight = new THREE.PointLight(0xffaa00, 0.0, 10);
 faceLight.position.set(0, 0.5, 2);
 scene.add(faceLight);
-const dirLight = new THREE.DirectionalLight(0x88aaff, 0.8);
-dirLight.position.set(2, 0, 3);
+const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
+dirLight.position.set(2, 5, 5);
 scene.add(dirLight);
 const eyeLight = new THREE.PointLight(0xffffff, 0, 0);
 eyeLight.position.set(0, 0.15, 0.8);
@@ -131,17 +131,9 @@ function buildHUD() {
     hudGroup.position.set(0, 0.05, -0.5);
     scene.add(hudGroup);
 
-    const ring1 = new THREE.Mesh(
-        new THREE.RingGeometry(1.05, 1.06, 128),
-        new THREE.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.06, side: THREE.DoubleSide })
-    );
-    hudGroup.add(ring1);
-
-    const ring2 = new THREE.Mesh(
-        new THREE.RingGeometry(0.88, 0.90, 128),
-        new THREE.MeshBasicMaterial({ color: 0x3db89a, transparent: true, opacity: 0.06, side: THREE.DoubleSide })
-    );
-    hudGroup.add(ring2);
+    // Rings removed — using falling particles instead
+    const ring1 = new THREE.Mesh(new THREE.RingGeometry(1.05,1.06,4), new THREE.MeshBasicMaterial({transparent:true,opacity:0}));
+    const ring2 = new THREE.Mesh(new THREE.RingGeometry(0.88,0.90,4), new THREE.MeshBasicMaterial({transparent:true,opacity:0}));
 
     for (let i = 0; i < 48; i++) {
         if (i % 4 === 3) continue;
@@ -300,7 +292,7 @@ loader.load(MODEL_URL, (gltf) => {
             } else {
                 child.material = new THREE.MeshStandardMaterial({
                     name: matName,
-                    color: 0x004466,
+                    color: 0x00d4ff,
                     emissive: new THREE.Color(0x002244),
                     emissiveIntensity: 0.3,
                     transparent: false,
@@ -1590,6 +1582,50 @@ meshFloor.position.y = -0.82;
 scene.add(meshFloor);
 
 // =============================================================================
+// PARTÍCULAS CAYENDO
+// =============================================================================
+const fallingParticles = [];
+const FP_COUNT = 60;
+const fpPositions = new Float32Array(FP_COUNT * 3);
+const fpGeo = new THREE.BufferGeometry();
+fpGeo.setAttribute('position', new THREE.BufferAttribute(fpPositions, 3));
+const fpMat = new THREE.PointsMaterial({ color: 0x00d4ff, size: 0.018, transparent: true, opacity: 0.8 });
+const fpPoints = new THREE.Points(fpGeo, fpMat);
+scene.add(fpPoints);
+
+for (let i = 0; i < FP_COUNT; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const r = 0.85 + Math.random() * 0.35;
+    fallingParticles.push({
+        x: Math.cos(angle) * r,
+        y: 0.8 + Math.random() * 1.2,
+        z: Math.sin(angle) * r * 0.15,
+        speed: 0.003 + Math.random() * 0.006,
+        opacity: Math.random(),
+        r,
+    });
+}
+
+function updateFallingParticles() {
+    for (let i = 0; i < FP_COUNT; i++) {
+        const p = fallingParticles[i];
+        p.y -= p.speed;
+        if (p.y < -0.9) {
+            const angle = Math.random() * Math.PI * 2;
+            p.r = 0.85 + Math.random() * 0.35;
+            p.x = Math.cos(angle) * p.r;
+            p.z = Math.sin(angle) * p.r * 0.15;
+            p.y = 0.8 + Math.random() * 0.8;
+            p.speed = 0.003 + Math.random() * 0.006;
+        }
+        fpPositions[i * 3]     = p.x;
+        fpPositions[i * 3 + 1] = p.y;
+        fpPositions[i * 3 + 2] = p.z;
+    }
+    fpGeo.attributes.position.needsUpdate = true;
+}
+
+// =============================================================================
 // LOOP PRINCIPAL
 // =============================================================================
 function animate() {
@@ -1689,6 +1725,7 @@ function animate() {
         fg.light.intensity = fg.light.userData.baseInt * (0.4 + 0.6 * breath) * (isSpeaking ? 1.6 : 1.0);
     });
 
+    updateFallingParticles();
     updateGaze(1 / 60);
     controls.update();
     bloomPass.strength = isSpeaking ? 0.5 + Math.sin(time * 8) * 0.06 : 0.3 + Math.sin(time * 1.5) * 0.03;
