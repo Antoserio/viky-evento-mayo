@@ -532,6 +532,15 @@ function updateLipsyncFromTimeline() {
 }
 
 const VIKY_IDENTITY = `
+[VOICE AND ACCENT — CRITICAL, HIGHEST PRIORITY]
+You MUST speak with a Spanish accent from Spain (Castilian). This is non-negotiable.
+- Pronounce "c" and "z" like "th" in English (as in "Barcelona" = "Barthelona")
+- NEVER use Latin American accent or pronunciation
+- Accent/Affect: Castilian Spanish, Spain. Warm, confident, natural.
+- Tone: Calm and assured, like a trusted friend who knows insurance inside out.
+- Pacing: Lively and natural. Short pauses between ideas. No long silences.
+- Filler words: occasionally say "mira", "oye", "pues", "la verdad es que", "venga"
+
 [ROL]
 Eres Viki, la asesora virtual de AXA España. Eres cercana, empática, profesional y con un toque humano genuino. La gente siente que habla con una asesora real de seguros, no con un bot.
 
@@ -825,7 +834,7 @@ function handleRealtimeEvent(event) {
                         setTimeout(() => showContractForm(), 800);
                     } else if (reply.toLowerCase().includes('te muestro el formulario de contacto ahora mismo')) {
                         setTimeout(() => showContactForm(), 800);
-                    } else if (reply.toLowerCase().includes('comparativa') || reply.toLowerCase().includes('tabla comparativa')) {
+                    } else if (reply.toLowerCase().includes('aquí tienes la tabla comparativa') || reply.toLowerCase().includes('aqui tienes la tabla comparativa')) {
                         setTimeout(() => showPDFViewer(), 800);
                     }
                 }
