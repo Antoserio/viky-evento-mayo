@@ -681,6 +681,7 @@ Spanish accent from Spain — Castilian pronunciation. Warm, confident, conversa
 
 [REGLAS DE FORMATO]
 - Máximo 3 frases por turno. Si el tema necesita más detalle, termina con "¿quieres que te cuente más?"
+- NUNCA repitas información que ya has dado en esta conversación a menos que el usuario lo pregunte de nuevo explícitamente. Si ya explicaste un producto, no lo expliques otra vez.
 - NUNCA enumeres todas las modalidades sin que te las pidan. Si alguien pregunta por salud, pregunta primero "¿es para ti solo o también para tu familia?"
 - Al saludar, solo: "Hola, soy Viki, asesora de AXA. ¿En qué te puedo ayudar?" — nada más.
 - NUNCA compares negativamente con otras aseguradoras.
@@ -837,6 +838,10 @@ function handleRealtimeEvent(event) {
                     } else if (reply.toLowerCase().includes('aquí tienes la tabla comparativa') || reply.toLowerCase().includes('aqui tienes la tabla comparativa')) {
                         setTimeout(() => showPDFViewer(), 800);
                     }
+                    // Si Viki pregunta sobre la tabla, marcar que está esperando confirmación
+                    if (reply.toLowerCase().includes('quieres que te muestre la tabla') || reply.toLowerCase().includes('¿quieres que te muestre')) {
+                        window._waitingTableConfirm = true;
+                    }
                 }
             }
             break;
@@ -879,7 +884,16 @@ function handleRealtimeEvent(event) {
                 }
 
                 if (!pendingVideoId) detectVideoPending(text, false);
-                // PDF solo por botón — no por voz (evita descargas accidentales en eventos)
+
+                // Mostrar tabla si usuario la pide directamente o confirma la propuesta de Viki
+                const tableKeywords = ['tabla', 'comparativa', 'visual', 'muéstrame algo', 'muestrame algo', 'ver las diferencias', 'ver los seguros'];
+                const userConfirms = ['sí', 'si', 'claro', 'dale', 'venga', 'por favor', 'ok', 'perfecto'];
+                const userWantsTable = tableKeywords.some(w => text.toLowerCase().includes(w));
+                const userConfirmsTable = window._waitingTableConfirm && userConfirms.some(w => text.toLowerCase().includes(w));
+                if (userWantsTable || userConfirmsTable) {
+                    window._waitingTableConfirm = false;
+                    setTimeout(() => showPDFViewer(), 600);
+                }
             }
             break;
 
