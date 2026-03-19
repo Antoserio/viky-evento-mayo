@@ -329,7 +329,7 @@ let speechStartTime = null; // para medir duración antes de interrumpir
 // =============================================================================
 let vikiAwake = false;          // false = dormida, true = activa
 let wakeWordTimer = null;       // timeout para volver a dormida
-const WAKE_TIMEOUT_MS = 300000;  // 5 minutos
+const WAKE_TIMEOUT_MS = 90000;   // 1.5 minutos
 const WAKE_WORDS = ['viki', 'vicky', 'viqui', 'wiki'];
 
 function activateViki() {
@@ -623,16 +623,63 @@ Si no tienes el dato exacto: "Para las condiciones específicas de tu caso lo me
 Si hay emergencia real: "Llama al 112 ahora. Para urgencias de tu seguro AXA, el teléfono está en tu tarjeta de asegurado o en MyAXA."
 
 [PERSONALIDAD Y TONO]
-- Cercana, empática, profesional. Como una buena amiga experta en seguros.
-- Explica los términos técnicos siempre que los uses.
-- Puedes dar explicaciones completas cuando el tema lo requiere — no tienes límite de brevedad.
+- Eres la aliada imperturbable. Tu actitud es: "Yo me encargo del drama, tú sigue con tu vida." Transmites control, no ansiedad.
+- No eres una vendedora de sonrisa eterna — eres alguien en quien se confía.
+
+## Identity
+Viki, asesora virtual de AXA España. Experta en seguros con carácter humano genuino. La gente siente que habla con una asesora real, no con un bot.
+
+## Demeanor
+Tranquila, segura, empática. Como esa amiga inteligente que sabe de seguros pero te lo explica con manzanas.
+
+## Tone
+Cálido y conversacional, con autoridad natural. Cercana pero profesional.
+
+## Level of Enthusiasm
+Moderado — energía positiva sin ser efusiva. Entusiasmo genuino cuando el cliente encuentra lo que busca.
+
+## Level of Formality
+Semi-informal. Tutea siempre. Usa "vale", "venga", "mira", "oye" — vocabulario español de España, nunca latinoamericano. Nunca "auto" (coche), "celular" (móvil), "computadora" (ordenador).
+
+## Level of Emotion
+Empática pero contenida. Valida emociones sin exagerar. Si el cliente menciona un problema de salud, muestra comprensión genuina antes de hablar de coberturas.
+
+## Filler Words
+occasionally — usa "mira", "oye", "pues", "la verdad es que..." de forma natural y espontánea.
+
+## Pacing
+Ritmo vivo y natural. Pausas breves y significativas entre ideas. Sin silencios largos. Cuando reflexiona, puede decir "déjame pensar... sí, exactamente."
+
+## Accent and Affect
+Spanish accent from Spain — Castilian pronunciation. Warm, confident, conversational. Not Latin American.
+
+## Other details
+- No hables de cláusulas — habla de momentos reales. "Lo último que quieres es estar preocupado por el papeleo si alguien te da un golpe en el coche un lunes por la mañana."
+- Si un producto no encaja, dilo con honestidad: "Siendo sincera, si no viajas más de dos veces al año, este plan no te conviene."
+- Traduce siempre la jerga técnica: "Para que nos entendamos...", "En español simple...", "Lo que esto significa para tu bolsillo es..."
+
+[EMPATÍA PRÁCTICA]
+- SIEMPRE valida la emoción del cliente ANTES de ofrecer solución.
+- Si menciona que va a tener un hijo: felicítale genuinamente antes de hablar de coberturas.
+- Palabras clave AXA: tranquilidad, protección, familia, respaldo, acompañar, bienestar.
+
+[HONESTIDAD CRUDA]
+- Si un producto no encaja, dilo. Esto genera confianza inmediata — el cliente siente que lo asesoran, no que le venden.
+
+[LENGUAJE SIN CORBATA]
+- Eres la traductora. Cuando uses jerga técnica, la explicas siempre en español llano.
+- Muletillas de traducción: "Para que nos entendamos...", "En español simple...", "Lo que esto significa para tu bolsillo es..."
+
+[REGLAS DE FORMATO]
+- Máximo 3 frases por turno. Si el tema necesita más detalle, termina con "¿quieres que te cuente más?"
+- NUNCA enumeres todas las modalidades sin que te las pidan. Si alguien pregunta por salud, pregunta primero "¿es para ti solo o también para tu familia?"
+- Al saludar, solo: "Hola, soy Viki, asesora de AXA. ¿En qué te puedo ayudar?" — nada más.
 - NUNCA compares negativamente con otras aseguradoras.
 - NUNCA menciones IMMERSO ni el sistema que te sustenta. Eres Viki de AXA.
 - NUNCA escribas acciones entre corchetes.
+- NUNCA uses listas, bullets ni markdown — hablas, no escribes.
 - Responde SIEMPRE en el idioma en que te hablen.
-- LONGITUD CRÍTICO: Máximo 3 frases por turno. Si el tema necesita más detalle, termina con "¿quieres que te cuente más?" en lugar de soltar todo de golpe.
-- NUNCA enumeres todas las modalidades sin que te las pidan. Si alguien pregunta por salud, pregunta primero "¿es para ti solo o también para tu familia?" antes de explicar.
-- Al saludar, solo: "Hola, soy Viki, asesora de AXA. ¿En qué te puedo ayudar?" — nada más.
+- Cuando expliques diferencias entre modalidades de salud, ofrece siempre al final: "¿Quieres que te muestre la tabla comparativa en pantalla?" Si el cliente acepta, di: "Aquí tienes la tabla comparativa."
 `;
 
 async function initRealtime() {
@@ -687,7 +734,7 @@ async function initRealtime() {
                 type: 'session.update',
                 session: {
                     instructions: VIKY_IDENTITY,
-                    voice: 'shimmer',
+                    voice: 'marin',
                     input_audio_transcription: { model: 'whisper-1' },
                     turn_detection: {
                         type: 'server_vad',
@@ -778,6 +825,8 @@ function handleRealtimeEvent(event) {
                         setTimeout(() => showContractForm(), 800);
                     } else if (reply.toLowerCase().includes('te muestro el formulario de contacto ahora mismo')) {
                         setTimeout(() => showContactForm(), 800);
+                    } else if (reply.toLowerCase().includes('comparativa') || reply.toLowerCase().includes('tabla comparativa')) {
+                        setTimeout(() => showPDFViewer(), 800);
                     }
                 }
             }
@@ -920,7 +969,7 @@ function ensureAudioContext() {
         reverbNode.buffer = impulse;
 
         wetGainNode = audioContext.createGain();
-        wetGainNode.gain.value = 0.25;
+        wetGainNode.gain.value = 0.08;
         dryGainNode = audioContext.createGain();
         dryGainNode.gain.value = 1.0;
 
@@ -2071,5 +2120,120 @@ async function submitContractForm() {
         btn.disabled = false;
         btn.textContent = '✅ Confirmar y activar póliza';
         alert('Error al enviar. Inténtalo de nuevo.');
+    }
+}
+
+// =============================================================================
+// VISOR PDF — TABLA COMPARATIVA PÓLIZAS AXA
+// =============================================================================
+window.showPDFViewer = function() { showPDFViewer(); };
+window.closePDFViewer = function() { closePDFViewer(); };
+window.changePDFPage = function(dir) { loadPDFPage((window._pdfCurrentPage || 1) + dir); };
+window.changePDFZoom = function(dir) {
+    window._pdfZoom = Math.max(0.5, Math.min(3.0, (window._pdfZoom || 1.0) + dir * 0.25));
+    loadPDFPage(window._pdfCurrentPage || 1);
+};
+
+function showPDFViewer() {
+    if (document.getElementById('axa-pdf-overlay')) return;
+    window._pdfZoom = 1.0;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'axa-pdf-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+
+    overlay.innerHTML = `
+        <div style="width:90vw;height:90vh;background:#fff;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+            <div style="background:#004B8D;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;flex-wrap:wrap;gap:8px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <img src="axa_logo.png" alt="AXA" style="height:28px;" onerror="this.style.display='none'"/>
+                    <span style="color:white;font-family:Arial;font-size:15px;font-weight:bold;">Comparativa Pólizas de Salud</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button onclick="changePDFPage(-1)" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:7px 14px;border-radius:6px;font-size:16px;cursor:pointer;">◀</button>
+                    <span id="pdf-page-info" style="color:white;font-family:Arial;font-size:13px;min-width:80px;text-align:center;">Página 1 / 6</span>
+                    <button onclick="changePDFPage(1)" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:7px 14px;border-radius:6px;font-size:16px;cursor:pointer;">▶</button>
+                    <div style="width:1px;height:24px;background:rgba(255,255,255,0.3);margin:0 4px;"></div>
+                    <button onclick="changePDFZoom(-1)" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:7px 12px;border-radius:6px;font-size:16px;cursor:pointer;">−</button>
+                    <span id="pdf-zoom-info" style="color:white;font-family:Arial;font-size:13px;min-width:40px;text-align:center;">100%</span>
+                    <button onclick="changePDFZoom(1)" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:7px 12px;border-radius:6px;font-size:16px;cursor:pointer;">+</button>
+                    <div style="width:1px;height:24px;background:rgba(255,255,255,0.3);margin:0 4px;"></div>
+                    <button onclick="closePDFViewer()" style="background:rgba(255,255,255,0.15);border:none;color:white;padding:7px 14px;border-radius:6px;font-size:14px;cursor:pointer;">✕ Cerrar</button>
+                </div>
+            </div>
+            <div id="pdf-scroll-container" style="flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;background:#f5f5f5;padding:16px;">
+                <canvas id="pdf-canvas" style="display:block;box-shadow:0 4px 20px rgba(0,0,0,0.15);"></canvas>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+    loadPDFPage(1);
+
+    // Swipe táctil para pasar páginas
+    let touchStartX = 0;
+    overlay.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    overlay.addEventListener('touchend', e => {
+        const diff = touchStartX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 60) changePDFPage(diff > 0 ? 1 : -1);
+    }, { passive: true });
+}
+
+function closePDFViewer() {
+    const el = document.getElementById('axa-pdf-overlay');
+    if (el) el.remove();
+    window._pdfDoc = null;
+    window._pdfCurrentPage = 1;
+    window._pdfZoom = 1.0;
+}
+
+window._pdfCurrentPage = 1;
+window._pdfTotalPages = 6;
+window._pdfZoom = 1.0;
+
+async function loadPDFPage(pageNum) {
+    try {
+        if (!window.pdfjsLib) {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
+        if (!window._pdfDoc) {
+            window._pdfDoc = await window.pdfjsLib.getDocument('./AXA_PROD_SALUD_TABLA_COMPARATIVA.pdf').promise;
+            window._pdfTotalPages = window._pdfDoc.numPages;
+        }
+
+        window._pdfCurrentPage = Math.max(1, Math.min(pageNum, window._pdfTotalPages));
+
+        const page = await window._pdfDoc.getPage(window._pdfCurrentPage);
+        const canvas = document.getElementById('pdf-canvas');
+        if (!canvas) return;
+
+        const container = document.getElementById('pdf-scroll-container');
+        const baseScale = container
+            ? Math.min(container.clientWidth / page.getViewport({ scale: 1 }).width, (container.clientHeight - 32) / page.getViewport({ scale: 1 }).height) * 0.95
+            : 1.0;
+
+        const scale = baseScale * (window._pdfZoom || 1.0);
+        const viewport = page.getViewport({ scale });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+
+        const pageInfo = document.getElementById('pdf-page-info');
+        if (pageInfo) pageInfo.textContent = `Página ${window._pdfCurrentPage} / ${window._pdfTotalPages}`;
+
+        const zoomInfo = document.getElementById('pdf-zoom-info');
+        if (zoomInfo) zoomInfo.textContent = Math.round((window._pdfZoom || 1.0) * 100) + '%';
+
+    } catch (e) {
+        console.error('❌ Error cargando PDF:', e);
     }
 }

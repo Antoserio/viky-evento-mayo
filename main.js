@@ -734,7 +734,7 @@ async function initRealtime() {
                 type: 'session.update',
                 session: {
                     instructions: VIKY_IDENTITY,
-                    voice: 'marin',
+                    voice: 'coral',
                     input_audio_transcription: { model: 'whisper-1' },
                     turn_detection: {
                         type: 'server_vad',
@@ -882,26 +882,13 @@ function handleRealtimeEvent(event) {
 
         case 'input_audio_buffer.speech_stopped':
             if (!vikiAwake) break; // dormida — ignorar
-            // Interrumpir solo si:
-            // 1. Viki está hablando
-            // 2. El habla duró más de 800ms (voz real sostenida, no feedback ni ruido)
-            // 3. Han pasado al menos 1.5s desde que Viki empezó a hablar (evita feedback inmediato)
-            const speakingDuration = lipsyncStartTime ? (Date.now() - lipsyncStartTime) : 0;
-            const speechDuration = speechStartTime ? (Date.now() - speechStartTime) : 0;
-          if (isSpeaking && speechDuration >= 1200 && speakingDuration >= 3000) {
-                sendRealtimeEvent({ type: 'response.cancel' });
-                isSpeaking = false;
-                lipsyncTimeline = [];
-                lipsyncStartTime = null;
-                Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });
-                applyIdleExpression();
-                console.log('⚡ Interrupción por usuario');
-                resetWakeTimer();
-            }
+            // Dejar que el VAD de OpenAI gestione la interrupción automáticamente
             speechStartTime = null;
-            applyExpression('thinking');
-            loadingEl.classList.remove('hidden');
-            loadingEl.textContent = 'Viky está pensando...';
+            if (!isSpeaking) {
+                applyExpression('thinking');
+                loadingEl.classList.remove('hidden');
+                loadingEl.textContent = 'Viky está pensando...';
+            }
             break;
 
         case 'response.audio_transcript.delta': {
