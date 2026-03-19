@@ -709,7 +709,7 @@ async function initRealtime() {
                 type: 'session.update',
                 session: {
                     instructions: VIKY_IDENTITY,
-                    voice: 'alloy',
+                    voice: 'coral',
                     input_audio_transcription: { model: 'whisper-1' },
                     turn_detection: {
                         type: 'server_vad',
@@ -865,6 +865,7 @@ function handleRealtimeEvent(event) {
             const speechDuration = speechStartTime ? (Date.now() - speechStartTime) : 0;
           if (isSpeaking && speechDuration >= 1200 && speakingDuration >= 3000) {
                 sendRealtimeEvent({ type: 'response.cancel' });
+                sendRealtimeEvent({ type: 'input_audio_buffer.clear' });
                 isSpeaking = false;
                 lipsyncTimeline = [];
                 lipsyncStartTime = null;
