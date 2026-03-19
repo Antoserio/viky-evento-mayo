@@ -85,13 +85,13 @@ controls.enableDamping = true;
 controls.target.set(0, 0, 0);
 
 // Luces
-const ambLight = new THREE.AmbientLight(0xffffff, 0.8);
+const ambLight = new THREE.AmbientLight(0xaaccff, 1.6);
 scene.add(ambLight);
 const faceLight = new THREE.PointLight(0xffaa00, 0.0, 10);
 faceLight.position.set(0, 0.5, 2);
 scene.add(faceLight);
-const dirLight = new THREE.DirectionalLight(0x4488cc, 0.6);
-dirLight.position.set(2, 2, 3);
+const dirLight = new THREE.DirectionalLight(0x88bbff, 1.4);
+dirLight.position.set(0.5, 1, 3);
 scene.add(dirLight);
 const eyeLight = new THREE.PointLight(0xffffff, 0, 0);
 eyeLight.position.set(0, 0.15, 0.8);
@@ -126,8 +126,8 @@ function buildHUD() {
     scene.add(hudGroup);
 
     const ring1 = new THREE.Mesh(
-        new THREE.RingGeometry(1.05, 1.08, 128),
-        new THREE.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.08, side: THREE.DoubleSide })
+        new THREE.RingGeometry(1.05, 1.10, 128),
+        new THREE.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.12, side: THREE.DoubleSide, wireframe: false })
     );
     hudGroup.add(ring1);
 
@@ -274,11 +274,11 @@ loader.load(MODEL_URL, (gltf) => {
             if (matName === 'Eye') {
                 child.material = new THREE.MeshStandardMaterial({
                     name: 'Eye',
-                    color: new THREE.Color(0xaaccff),
-                    emissive: new THREE.Color(0x4488cc),
-                    emissiveIntensity: 0.6,
-                    roughness: 0.3,
-                    metalness: 0.2,
+                    color: new THREE.Color(0xddeeff),
+                    emissive: new THREE.Color(0x3366aa),
+                    emissiveIntensity: 0.8,
+                    roughness: 0.1,
+                    metalness: 0.5,
                 });
             } else if (matName === 'eyebrow') {
                 child.material = new THREE.MeshStandardMaterial({
