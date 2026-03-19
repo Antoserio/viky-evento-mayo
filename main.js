@@ -93,8 +93,8 @@ scene.add(faceLight);
 const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
 dirLight.position.set(2, 5, 5);
 scene.add(dirLight);
-const eyeLight = new THREE.PointLight(0xffffff, 0, 0);
-eyeLight.position.set(0, 0.15, 0.8);
+const eyeLight = new THREE.PointLight(0xffffff, 1.2, 2);
+eyeLight.position.set(0, 0.2, 0.6);
 scene.add(eyeLight);
 
 // --- FACE GHOST LIGHTS ---
@@ -116,6 +116,13 @@ for (let i = 0; i < 5; i++) {
     scene.add(pLight);
     ghostLights.push({ light: pLight, angle, speed: 0.006 + (i * 0.002), yBase: yPos, baseIntensity: i === 0 ? 0.15 : 0.09 });
 }
+
+// --- SUELO REFLECTANTE ---
+const grid = new THREE.GridHelper(10, 20, 0x00d4ff, 0x002233);
+grid.position.y = -1;
+grid.material.opacity = 0.2;
+grid.material.transparent = true;
+scene.add(grid);
 
 // --- HUD FUTURISTA ---
 const hudElements = [];
@@ -744,7 +751,7 @@ async function initRealtime() {
                 type: 'session.update',
                 session: {
                     instructions: VIKY_IDENTITY,
-                    voice: 'shimmer',
+                    voice: 'coral',
                     input_audio_transcription: { model: 'whisper-1' },
                     turn_detection: {
                         type: 'server_vad',

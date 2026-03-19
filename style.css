@@ -409,11 +409,12 @@ body::after {
 
 /* --- CANVAS VISUAL IMPROVEMENTS --- */
 #canvas-container {
-    background: radial-gradient(circle at center, #10203a 0%, #030810 100%);
+    background: radial-gradient(circle at center, #162a47 0%, #02050a 100%) !important;
 }
 
-#canvas-container canvas {
-    filter: drop-shadow(0 0 12px rgba(0, 212, 255, 0.25));
+canvas {
+    display: block;
+    filter: contrast(1.1) brightness(1.05) drop-shadow(0 0 15px rgba(0, 212, 255, 0.2));
 }
 
 /* (fin del archivo) */
