@@ -57,7 +57,7 @@ let dryGainNode = null;
 // --- THREE.JS SETUP ---
 const scene = new THREE.Scene();
 window.scene = scene;
-scene.background = new THREE.Color(0x030810);
+scene.background = new THREE.Color(0x060d1a);
 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 0.1, 0.5);
@@ -93,8 +93,8 @@ scene.add(faceLight);
 const rimLight = new THREE.PointLight(0x00d4ff, 2.0, 5);
 rimLight.position.set(-2, 0, -1);
 scene.add(rimLight);
-const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
-dirLight.position.set(2, 5, 5);
+const dirLight = new THREE.DirectionalLight(0xffd4aa, 1.2);
+dirLight.position.set(1, 2, 3);
 scene.add(dirLight);
 const eyeLight = new THREE.PointLight(0xffffff, 0, 0);
 eyeLight.position.set(0, 0.15, 0.8);
@@ -102,8 +102,8 @@ scene.add(eyeLight);
 
 // --- FACE GHOST LIGHTS ---
 const faceGhosts = [
-    { light: new THREE.PointLight(0x00d4ff, 0.55, 2.0), baseX: -0.22, baseY: 0.05, baseZ: 0.50, phase: 0.0 },
-    { light: new THREE.PointLight(0x3db89a, 0.50, 2.0), baseX: 0.22, baseY: 0.05, baseZ: 0.50, phase: 1.2 },
+    { light: new THREE.PointLight(0xffaa77, 0.80, 2.0), baseX: -0.22, baseY: 0.05, baseZ: 0.50, phase: 0.0 },
+    { light: new THREE.PointLight(0x00d4ff, 0.45, 2.0), baseX: 0.22, baseY: 0.05, baseZ: 0.50, phase: 1.2 },
     { light: new THREE.PointLight(0xffbb99, 0.35, 1.8), baseX: 0.00, baseY: 0.30, baseZ: 0.48, phase: 2.4 },
 ];
 faceGhosts.forEach(fg => scene.add(fg.light));
