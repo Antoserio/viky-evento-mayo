@@ -85,13 +85,13 @@ controls.enableDamping = true;
 controls.target.set(0, 0, 0);
 
 // Luces
-const ambLight = new THREE.AmbientLight(0x223355, 0.6);
+const ambLight = new THREE.AmbientLight(0x5588bb, 1.2);
 scene.add(ambLight);
 const faceLight = new THREE.PointLight(0xffaa00, 0.0, 10);
 faceLight.position.set(0, 0.5, 2);
 scene.add(faceLight);
-const dirLight = new THREE.DirectionalLight(0x4466aa, 0.25);
-dirLight.position.set(1, 0.5, 3);
+const dirLight = new THREE.DirectionalLight(0x88aaff, 0.8);
+dirLight.position.set(2, 0, 3);
 scene.add(dirLight);
 const eyeLight = new THREE.PointLight(0xffffff, 0, 0);
 eyeLight.position.set(0, 0.15, 0.8);
@@ -300,9 +300,9 @@ loader.load(MODEL_URL, (gltf) => {
             } else {
                 child.material = new THREE.MeshStandardMaterial({
                     name: matName,
-                    color: 0x1144aa,
-                    emissive: new THREE.Color(0x0044aa),
-                    emissiveIntensity: 1.2,
+                    color: 0x004466,
+                    emissive: new THREE.Color(0x002244),
+                    emissiveIntensity: 0.3,
                     transparent: false,
                     metalness: 1.0,
                     roughness: 0.2,
