@@ -734,7 +734,7 @@ async function initRealtime() {
                 type: 'session.update',
                 session: {
                     instructions: VIKY_IDENTITY,
-                    voice: 'coral',
+                    voice: 'marin',
                     input_audio_transcription: { model: 'whisper-1' },
                     turn_detection: {
                         type: 'server_vad',
@@ -890,14 +890,12 @@ function handleRealtimeEvent(event) {
             const speechDuration = speechStartTime ? (Date.now() - speechStartTime) : 0;
           if (isSpeaking && speechDuration >= 1200 && speakingDuration >= 3000) {
                 sendRealtimeEvent({ type: 'response.cancel' });
-                sendRealtimeEvent({ type: 'input_audio_buffer.clear' });
                 isSpeaking = false;
                 lipsyncTimeline = [];
                 lipsyncStartTime = null;
                 Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });
                 applyIdleExpression();
                 console.log('⚡ Interrupción por usuario');
-                window._justInterrupted = true;
                 resetWakeTimer();
             }
             speechStartTime = null;
@@ -921,9 +919,8 @@ function handleRealtimeEvent(event) {
 
         case 'response.created':
     console.log('🔵 response.created, vikiAwake:', vikiAwake);
-    if (!vikiAwake || window._justInterrupted) {
-        window._justInterrupted = false;
-        // Dormida o tras interrupción — cancelar respuesta automática de OpenAI
+    if (!vikiAwake) {
+        // Dormida — cancelar respuesta que OpenAI generó automáticamente
         sendRealtimeEvent({ type: 'response.cancel' });
         break;
             }
