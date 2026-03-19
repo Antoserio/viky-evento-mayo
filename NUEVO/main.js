@@ -532,6 +532,15 @@ function updateLipsyncFromTimeline() {
 }
 
 const VIKY_IDENTITY = `
+[VOICE AND ACCENT — CRITICAL, HIGHEST PRIORITY]
+You MUST speak with a Spanish accent from Spain (Castilian). This is non-negotiable.
+- Pronounce "c" and "z" like "th" in English (as in "Barcelona" = "Barthelona")
+- NEVER use Latin American accent or pronunciation
+- Accent/Affect: Castilian Spanish, Spain. Warm, confident, natural.
+- Tone: Calm and assured, like a trusted friend who knows insurance inside out.
+- Pacing: Lively and natural. Short pauses between ideas. No long silences.
+- Filler words: occasionally say "mira", "oye", "pues", "la verdad es que", "venga"
+
 [ROL]
 Eres Viki, la asesora virtual de AXA España. Eres cercana, empática, profesional y con un toque humano genuino. La gente siente que habla con una asesora real de seguros, no con un bot.
 
@@ -734,7 +743,7 @@ async function initRealtime() {
                 type: 'session.update',
                 session: {
                     instructions: VIKY_IDENTITY,
-                    voice: 'marin',
+                    voice: 'shimmer',
                     input_audio_transcription: { model: 'whisper-1' },
                     turn_detection: {
                         type: 'server_vad',
@@ -825,7 +834,7 @@ function handleRealtimeEvent(event) {
                         setTimeout(() => showContractForm(), 800);
                     } else if (reply.toLowerCase().includes('te muestro el formulario de contacto ahora mismo')) {
                         setTimeout(() => showContactForm(), 800);
-                    } else if (reply.toLowerCase().includes('comparativa') || reply.toLowerCase().includes('tabla comparativa')) {
+                    } else if (reply.toLowerCase().includes('aquí tienes la tabla comparativa') || reply.toLowerCase().includes('aqui tienes la tabla comparativa')) {
                         setTimeout(() => showPDFViewer(), 800);
                     }
                 }
@@ -882,26 +891,13 @@ function handleRealtimeEvent(event) {
 
         case 'input_audio_buffer.speech_stopped':
             if (!vikiAwake) break; // dormida — ignorar
-            // Interrumpir solo si:
-            // 1. Viki está hablando
-            // 2. El habla duró más de 800ms (voz real sostenida, no feedback ni ruido)
-            // 3. Han pasado al menos 1.5s desde que Viki empezó a hablar (evita feedback inmediato)
-            const speakingDuration = lipsyncStartTime ? (Date.now() - lipsyncStartTime) : 0;
-            const speechDuration = speechStartTime ? (Date.now() - speechStartTime) : 0;
-          if (isSpeaking && speechDuration >= 1200 && speakingDuration >= 3000) {
-                sendRealtimeEvent({ type: 'response.cancel' });
-                isSpeaking = false;
-                lipsyncTimeline = [];
-                lipsyncStartTime = null;
-                Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });
-                applyIdleExpression();
-                console.log('⚡ Interrupción por usuario');
-                resetWakeTimer();
-            }
+            // Dejar que el VAD de OpenAI gestione la interrupción automáticamente
             speechStartTime = null;
-            applyExpression('thinking');
-            loadingEl.classList.remove('hidden');
-            loadingEl.textContent = 'Viky está pensando...';
+            if (!isSpeaking) {
+                applyExpression('thinking');
+                loadingEl.classList.remove('hidden');
+                loadingEl.textContent = 'Viky está pensando...';
+            }
             break;
 
         case 'response.audio_transcript.delta': {
