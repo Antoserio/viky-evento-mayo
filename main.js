@@ -90,8 +90,8 @@ scene.add(ambLight);
 const faceLight = new THREE.PointLight(0xffaa00, 0.0, 10);
 faceLight.position.set(0, 0.5, 2);
 scene.add(faceLight);
-const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
-dirLight.position.set(2, 5, 5);
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+dirLight.position.set(2, 3, 5);
 scene.add(dirLight);
 const eyeLight = new THREE.PointLight(0xffffff, 0, 0);
 eyeLight.position.set(0, 0.15, 0.8);
@@ -157,23 +157,10 @@ function buildHUD() {
         ));
     }
 
-    [0, Math.PI / 2, Math.PI, Math.PI * 1.5].forEach((startAngle, i) => {
-        hudGroup.add(new THREE.Mesh(
-            new THREE.RingGeometry(1.12, 1.15, 32, 1, startAngle + 0.15, Math.PI / 2 - 0.3),
-            new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0x00d4ff : 0x3db89a, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
-        ));
-    });
+    // Arcos exteriores eliminados
 
-    const segGroup = new THREE.Group();
+    const segGroup = new THREE.Group(); // eliminado visualmente
     hudGroup.add(segGroup);
-    for (let i = 0; i < 24; i++) {
-        if (i % 3 === 2) continue;
-        const angle = (i / 24) * Math.PI * 2;
-        segGroup.add(new THREE.Mesh(
-            new THREE.RingGeometry(1.18, 1.22, 1, 1, angle, (Math.PI * 2 / 24) * 0.6),
-            new THREE.MeshBasicMaterial({ color: 0x3db89a, transparent: true, opacity: 0.4, side: THREE.DoubleSide })
-        ));
-    }
 
     const scanner = new THREE.Line(
         new THREE.BufferGeometry().setFromPoints([
@@ -1585,11 +1572,11 @@ scene.add(meshFloor);
 // PARTÍCULAS CAYENDO
 // =============================================================================
 const fallingParticles = [];
-const FP_COUNT = 60;
+const FP_COUNT = 28;
 const fpPositions = new Float32Array(FP_COUNT * 3);
 const fpGeo = new THREE.BufferGeometry();
 fpGeo.setAttribute('position', new THREE.BufferAttribute(fpPositions, 3));
-const fpMat = new THREE.PointsMaterial({ color: 0x00d4ff, size: 0.018, transparent: true, opacity: 0.8 });
+const fpMat = new THREE.PointsMaterial({ color: 0x00ffff, size: 0.035, transparent: true, opacity: 1.0 });
 const fpPoints = new THREE.Points(fpGeo, fpMat);
 scene.add(fpPoints);
 
