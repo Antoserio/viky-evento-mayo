@@ -57,7 +57,7 @@ let dryGainNode = null;
 // --- THREE.JS SETUP ---
 const scene = new THREE.Scene();
 window.scene = scene;
-scene.background = new THREE.Color(0x060d1a);
+scene.background = new THREE.Color(0x030810);
 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 0.1, 0.5);
@@ -71,9 +71,9 @@ document.getElementById('canvas-container').appendChild(renderer.domElement);
 // --- POST-PROCESSING ---
 const renderScene = new RenderPass(scene, camera);
 const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-bloomPass.threshold = 0.1;
-bloomPass.strength = 0.4;
-bloomPass.radius = 1.0;
+bloomPass.threshold = 0.15;
+bloomPass.strength = 0.5;
+bloomPass.radius = 0.8;
 const outputPass = new OutputPass();
 const composer = new EffectComposer(renderer);
 composer.addPass(renderScene);
@@ -85,25 +85,22 @@ controls.enableDamping = true;
 controls.target.set(0, 0, 0);
 
 // Luces
-const ambLight = new THREE.AmbientLight(0x404040, 1.2);
+const ambLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambLight);
-const faceLight = new THREE.PointLight(0xffccaa, 1.5, 5);
-faceLight.position.set(1, 1, 2);
+const faceLight = new THREE.DirectionalLight(0xffe0cc, 1.0);
+faceLight.position.set(0, 0.5, 2);
 scene.add(faceLight);
-const rimLight = new THREE.PointLight(0x00d4ff, 2.0, 5);
-rimLight.position.set(-2, 0, -1);
-scene.add(rimLight);
-const dirLight = new THREE.DirectionalLight(0xffd4aa, 1.2);
-dirLight.position.set(1, 2, 3);
-scene.add(dirLight);
-const eyeLight = new THREE.PointLight(0xffffff, 0, 0);
-eyeLight.position.set(0, 0.15, 0.8);
+const backLight = new THREE.PointLight(0x00d4ff, 2.5, 10);
+backLight.position.set(0, 1, -2);
+scene.add(backLight);
+const eyeLight = new THREE.PointLight(0xffffff, 0.8, 1);
+eyeLight.position.set(0, 0.15, 0.5);
 scene.add(eyeLight);
 
 // --- FACE GHOST LIGHTS ---
 const faceGhosts = [
-    { light: new THREE.PointLight(0xffaa77, 0.80, 2.0), baseX: -0.22, baseY: 0.05, baseZ: 0.50, phase: 0.0 },
-    { light: new THREE.PointLight(0x00d4ff, 0.45, 2.0), baseX: 0.22, baseY: 0.05, baseZ: 0.50, phase: 1.2 },
+    { light: new THREE.PointLight(0x00d4ff, 0.55, 2.0), baseX: -0.22, baseY: 0.05, baseZ: 0.50, phase: 0.0 },
+    { light: new THREE.PointLight(0x3db89a, 0.50, 2.0), baseX: 0.22, baseY: 0.05, baseZ: 0.50, phase: 1.2 },
     { light: new THREE.PointLight(0xffbb99, 0.35, 1.8), baseX: 0.00, baseY: 0.30, baseZ: 0.48, phase: 2.4 },
 ];
 faceGhosts.forEach(fg => scene.add(fg.light));
@@ -282,7 +279,12 @@ loader.load(MODEL_URL, (gltf) => {
                     tex.flipY = false;
                     let mat;
                     if (matName === 'Eye') {
-                        mat = new THREE.MeshStandardMaterial({ name: 'Eye', map: tex, color: new THREE.Color(0x888888), emissive: new THREE.Color(0x000000), emissiveIntensity: 0.0, roughness: 0.5, metalness: 0.1 });
+                        mat = new THREE.MeshStandardMaterial({ name: 'Eye', map: tex, color: new THREE.Color(0xffffff), emissive: new THREE.Color(0xffffff), emissiveIntensity: 1.5, roughness: 0.3, metalness: 0.1 });
+                    } else if (matName === 'Holografic') {
+                        mat = child.material.clone();
+                        mat.map = tex;
+                        mat.emissive = new THREE.Color(0x0066ff);
+                        mat.emissiveIntensity = 0.3;
                     } else {
                         mat = child.material.clone();
                         mat.map = tex;
@@ -1656,7 +1658,7 @@ function animate() {
 
     updateGaze(1 / 60);
     controls.update();
-    bloomPass.strength = isSpeaking ? 0.7 + Math.sin(time * 8) * 0.08 : 0.4 + Math.sin(time * 1.5) * 0.03;
+    bloomPass.strength = isSpeaking ? 0.7 + Math.sin(time * 8) * 0.06 : 0.5 + Math.sin(time * 1.5) * 0.03;
     composer.render();
 }
 animate();

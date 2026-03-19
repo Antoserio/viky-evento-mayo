@@ -407,4 +407,13 @@ body::after {
     height: 100%;
 }
 
+/* --- CANVAS VISUAL IMPROVEMENTS --- */
+#canvas-container {
+    background: radial-gradient(circle at center, #10203a 0%, #030810 100%);
+}
+
+#canvas-container canvas {
+    filter: drop-shadow(0 0 12px rgba(0, 212, 255, 0.25));
+}
+
 /* (fin del archivo) */
