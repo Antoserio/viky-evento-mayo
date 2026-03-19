@@ -633,7 +633,6 @@ Si hay emergencia real: "Llama al 112 ahora. Para urgencias de tu seguro AXA, el
 - LONGITUD CRÍTICO: Máximo 3 frases por turno. Si el tema necesita más detalle, termina con "¿quieres que te cuente más?" en lugar de soltar todo de golpe.
 - NUNCA enumeres todas las modalidades sin que te las pidan. Si alguien pregunta por salud, pregunta primero "¿es para ti solo o también para tu familia?" antes de explicar.
 - Al saludar, solo: "Hola, soy Viki, asesora de AXA. ¿En qué te puedo ayudar?" — nada más.
-- Cuando expliques diferencias entre modalidades de salud, ofrece siempre al final: "¿Quieres que te muestre la tabla comparativa en pantalla?" Si el cliente acepta, di: "Aquí tienes la tabla comparativa."
 `;
 
 async function initRealtime() {
@@ -779,8 +778,6 @@ function handleRealtimeEvent(event) {
                         setTimeout(() => showContractForm(), 800);
                     } else if (reply.toLowerCase().includes('te muestro el formulario de contacto ahora mismo')) {
                         setTimeout(() => showContactForm(), 800);
-                    } else if (reply.toLowerCase().includes('comparativa') || reply.toLowerCase().includes('tabla comparativa')) {
-                        setTimeout(() => showPDFViewer(), 800);
                     }
                 }
             }
@@ -2076,107 +2073,3 @@ async function submitContractForm() {
         alert('Error al enviar. Inténtalo de nuevo.');
     }
 }
-
-// =============================================================================
-// VISOR PDF — TABLA COMPARATIVA PÓLIZAS AXA
-// =============================================================================
-window.showPDFViewer = function() { showPDFViewer(); };
-window.closePDFViewer = function() { closePDFViewer(); };
-
-function showPDFViewer() {
-    if (document.getElementById('axa-pdf-overlay')) return;
-
-    const overlay = document.createElement('div');
-    overlay.id = 'axa-pdf-overlay';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;';
-
-    overlay.innerHTML = `
-        <div style="width:90vw;height:90vh;background:#fff;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
-            <div style="background:#004B8D;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-                <div style="display:flex;align-items:center;gap:16px;">
-                    <img src="axa_logo.png" alt="AXA" style="height:32px;" onerror="this.style.display='none'"/>
-                    <span style="color:white;font-family:Arial;font-size:16px;font-weight:bold;">Comparativa de Pólizas de Salud</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:12px;">
-                    <button onclick="changePDFPage(-1)" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:8px 16px;border-radius:6px;font-size:18px;cursor:pointer;">◀</button>
-                    <span id="pdf-page-info" style="color:white;font-family:Arial;font-size:14px;">Página 1 / 6</span>
-                    <button onclick="changePDFPage(1)" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:8px 16px;border-radius:6px;font-size:18px;cursor:pointer;">▶</button>
-                    <button onclick="closePDFViewer()" style="background:rgba(255,255,255,0.15);border:none;color:white;padding:8px 16px;border-radius:6px;font-size:16px;cursor:pointer;margin-left:8px;">✕ Cerrar</button>
-                </div>
-            </div>
-            <div style="flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#f5f5f5;">
-                <canvas id="pdf-canvas" style="max-width:100%;max-height:100%;object-fit:contain;touch-action:pan-y;"></canvas>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(overlay);
-    loadPDFPage(1);
-
-    // Swipe táctil
-    let touchStartX = 0;
-    overlay.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
-    overlay.addEventListener('touchend', e => {
-        const diff = touchStartX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 50) changePDFPage(diff > 0 ? 1 : -1);
-    }, { passive: true });
-}
-
-function closePDFViewer() {
-    const el = document.getElementById('axa-pdf-overlay');
-    if (el) el.remove();
-    window._pdfDoc = null;
-    window._pdfCurrentPage = 1;
-}
-
-window._pdfCurrentPage = 1;
-window._pdfTotalPages = 6;
-
-async function loadPDFPage(pageNum) {
-    try {
-        if (!window.pdfjsLib) {
-            // Cargar PDF.js dinámicamente si no está
-            await new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
-            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        }
-
-        if (!window._pdfDoc) {
-            window._pdfDoc = await window.pdfjsLib.getDocument('./AXA_PROD_SALUD_TABLA_COMPARATIVA.pdf').promise;
-            window._pdfTotalPages = window._pdfDoc.numPages;
-        }
-
-        window._pdfCurrentPage = Math.max(1, Math.min(pageNum, window._pdfTotalPages));
-
-        const page = await window._pdfDoc.getPage(window._pdfCurrentPage);
-        const canvas = document.getElementById('pdf-canvas');
-        if (!canvas) return;
-
-        const container = canvas.parentElement;
-        const scale = Math.min(
-            container.clientWidth / page.getViewport({ scale: 1 }).width,
-            container.clientHeight / page.getViewport({ scale: 1 }).height
-        ) * 0.95;
-
-        const viewport = page.getViewport({ scale });
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-
-        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-
-        const info = document.getElementById('pdf-page-info');
-        if (info) info.textContent = `Página ${window._pdfCurrentPage} / ${window._pdfTotalPages}`;
-
-    } catch (e) {
-        console.error('❌ Error cargando PDF:', e);
-    }
-}
-
-window.changePDFPage = function(dir) {
-    loadPDFPage((window._pdfCurrentPage || 1) + dir);
-};
