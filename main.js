@@ -70,10 +70,10 @@ document.getElementById('canvas-container').appendChild(renderer.domElement);
 
 // --- POST-PROCESSING ---
 const renderScene = new RenderPass(scene, camera);
-const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.6, 0.4, 0.85);
-bloomPass.threshold = 0.2;
-bloomPass.strength = 0;
-bloomPass.radius = 0.5;
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+bloomPass.threshold = 0.1;
+bloomPass.strength = 0.4;
+bloomPass.radius = 1.0;
 const outputPass = new OutputPass();
 const composer = new EffectComposer(renderer);
 composer.addPass(renderScene);
@@ -85,11 +85,14 @@ controls.enableDamping = true;
 controls.target.set(0, 0, 0);
 
 // Luces
-const ambLight = new THREE.AmbientLight(0xffffff, 0.8);
+const ambLight = new THREE.AmbientLight(0x404040, 1.2);
 scene.add(ambLight);
-const faceLight = new THREE.PointLight(0xffaa00, 0.0, 10);
-faceLight.position.set(0, 0.5, 2);
+const faceLight = new THREE.PointLight(0xffccaa, 1.5, 5);
+faceLight.position.set(1, 1, 2);
 scene.add(faceLight);
+const rimLight = new THREE.PointLight(0x00d4ff, 2.0, 5);
+rimLight.position.set(-2, 0, -1);
+scene.add(rimLight);
 const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
 dirLight.position.set(2, 5, 5);
 scene.add(dirLight);
@@ -288,34 +291,6 @@ loader.load(MODEL_URL, (gltf) => {
                     child.material = mat;
                 });
             }
-        }
-    });
-
-    // --- CAPA DE PIEL SEMITRANSPARENTE ---
-    model.traverse((child) => {
-        if (child.isMesh && child.material?.name === 'Holografic') {
-            // Clonar geometría y añadir capa piel encima
-            const skinMat = new THREE.MeshStandardMaterial({
-                color: new THREE.Color(0xe8b898),
-                roughness: 0.92,
-                metalness: 0.0,
-                transparent: true,
-                opacity: 0.22,
-                side: THREE.FrontSide,
-                depthWrite: false,
-                map: null,
-                normalMap: null,
-                emissiveMap: null,
-            });
-            const skinMesh = new THREE.Mesh(child.geometry, skinMat);
-            skinMesh.name = 'SkinLayer';
-            skinMesh.morphTargetInfluences = child.morphTargetInfluences;
-            skinMesh.morphTargetDictionary = child.morphTargetDictionary;
-            skinMesh.renderOrder = 1;
-            child.parent.add(skinMesh);
-            // Guardar referencia para sincronizar morphs
-            window._skinMesh = skinMesh;
-            window._skinBaseMesh = child;
         }
     });
 
@@ -1614,11 +1589,6 @@ function animate() {
         });
     }
 
-    // Sincronizar morphs de la capa de piel
-    if (window._skinMesh && window._skinBaseMesh) {
-        window._skinMesh.morphTargetInfluences = window._skinBaseMesh.morphTargetInfluences;
-    }
-
     // Movimiento de cabeza
     headNoiseT += 0.008;
     if (window.vikiModel) {
@@ -1686,7 +1656,7 @@ function animate() {
 
     updateGaze(1 / 60);
     controls.update();
-    bloomPass.strength = isSpeaking ? 0.65 + Math.sin(time * 8) * 0.08 : 0.45 + Math.sin(time * 1.5) * 0.04;
+    bloomPass.strength = isSpeaking ? 0.7 + Math.sin(time * 8) * 0.08 : 0.4 + Math.sin(time * 1.5) * 0.03;
     composer.render();
 }
 animate();
