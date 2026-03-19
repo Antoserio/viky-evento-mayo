@@ -295,7 +295,7 @@ loader.load(MODEL_URL, (gltf) => {
                     emissive: new THREE.Color(0x001122),
                     emissiveIntensity: 0.4,
                     transparent: true,
-                    opacity: 0.85,
+                    opacity: 1.0,
                     metalness: 1.0,
                     roughness: 0.2,
                     side: THREE.DoubleSide,
@@ -1574,21 +1574,12 @@ const floorMat = new THREE.MeshStandardMaterial({
     metalness: 0.95,
     roughness: 0.05,
     transparent: true,
-    opacity: 0.6,
+    opacity: 0.4,
 });
 const meshFloor = new THREE.Mesh(floorGeo, floorMat);
 meshFloor.rotation.x = -Math.PI / 2;
 meshFloor.position.y = -0.82;
 scene.add(meshFloor);
-
-// Línea de luz bajo los pies — sutil y elegante
-const glowLine = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.8, 0.02),
-    new THREE.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.4 })
-);
-glowLine.rotation.x = -Math.PI / 2;
-glowLine.position.set(0, -0.81, 0);
-scene.add(glowLine);
 
 // =============================================================================
 // LOOP PRINCIPAL
