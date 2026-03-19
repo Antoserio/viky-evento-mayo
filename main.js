@@ -272,10 +272,13 @@ loader.load(MODEL_URL, (gltf) => {
         if (child.isMesh) {
             const matName = child.material?.name || '';
             if (matName === 'Eye') {
-                child.material = new THREE.MeshBasicMaterial({
+                child.material = new THREE.MeshStandardMaterial({
                     name: 'Eye',
-                    color: 0xffffff,
-                    transparent: false,
+                    color: new THREE.Color(0xaaccff),
+                    emissive: new THREE.Color(0x4488cc),
+                    emissiveIntensity: 0.6,
+                    roughness: 0.3,
+                    metalness: 0.2,
                 });
             } else if (matName === 'eyebrow') {
                 child.material = new THREE.MeshStandardMaterial({
