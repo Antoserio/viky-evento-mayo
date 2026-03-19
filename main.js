@@ -296,13 +296,16 @@ loader.load(MODEL_URL, (gltf) => {
         if (child.isMesh && child.material?.name === 'Holografic') {
             // Clonar geometría y añadir capa piel encima
             const skinMat = new THREE.MeshStandardMaterial({
-                color: new THREE.Color(0xf2c4a0),
-                roughness: 0.85,
+                color: new THREE.Color(0xe8b898),
+                roughness: 0.92,
                 metalness: 0.0,
                 transparent: true,
-                opacity: 0.18,
+                opacity: 0.22,
                 side: THREE.FrontSide,
                 depthWrite: false,
+                map: null,
+                normalMap: null,
+                emissiveMap: null,
             });
             const skinMesh = new THREE.Mesh(child.geometry, skinMat);
             skinMesh.name = 'SkinLayer';
@@ -1683,7 +1686,7 @@ function animate() {
 
     updateGaze(1 / 60);
     controls.update();
-    bloomPass.strength = isSpeaking ? 0.9 + Math.sin(time * 8) * 0.1 : 0.6 + Math.sin(time * 1.5) * 0.05;
+    bloomPass.strength = isSpeaking ? 0.65 + Math.sin(time * 8) * 0.08 : 0.45 + Math.sin(time * 1.5) * 0.04;
     composer.render();
 }
 animate();
