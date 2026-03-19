@@ -291,6 +291,31 @@ loader.load(MODEL_URL, (gltf) => {
         }
     });
 
+    // --- CAPA DE PIEL SEMITRANSPARENTE ---
+    model.traverse((child) => {
+        if (child.isMesh && child.material?.name === 'Holografic') {
+            // Clonar geometría y añadir capa piel encima
+            const skinMat = new THREE.MeshStandardMaterial({
+                color: new THREE.Color(0xf2c4a0),
+                roughness: 0.85,
+                metalness: 0.0,
+                transparent: true,
+                opacity: 0.18,
+                side: THREE.FrontSide,
+                depthWrite: false,
+            });
+            const skinMesh = new THREE.Mesh(child.geometry, skinMat);
+            skinMesh.name = 'SkinLayer';
+            skinMesh.morphTargetInfluences = child.morphTargetInfluences;
+            skinMesh.morphTargetDictionary = child.morphTargetDictionary;
+            skinMesh.renderOrder = 1;
+            child.parent.add(skinMesh);
+            // Guardar referencia para sincronizar morphs
+            window._skinMesh = skinMesh;
+            window._skinBaseMesh = child;
+        }
+    });
+
     if (headMesh) {
         window.animatableMeshes = morphMeshes;
         statusEl.textContent = '✅ Viky Ready — toca para activar';
@@ -1584,6 +1609,11 @@ function animate() {
                 mesh.morphTargetInfluences[idx] = Math.max(0, currentMorphInfluences[fullKey]);
             });
         });
+    }
+
+    // Sincronizar morphs de la capa de piel
+    if (window._skinMesh && window._skinBaseMesh) {
+        window._skinMesh.morphTargetInfluences = window._skinBaseMesh.morphTargetInfluences;
     }
 
     // Movimiento de cabeza
