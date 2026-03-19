@@ -71,9 +71,9 @@ document.getElementById('canvas-container').appendChild(renderer.domElement);
 // --- POST-PROCESSING ---
 const renderScene = new RenderPass(scene, camera);
 const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.6, 0.4, 0.85);
-bloomPass.threshold = 0.2;
-bloomPass.strength = 0;
-bloomPass.radius = 0.5;
+bloomPass.threshold = 0.85;
+bloomPass.strength = 0.3;
+bloomPass.radius = 0.4;
 const outputPass = new OutputPass();
 const composer = new EffectComposer(renderer);
 composer.addPass(renderScene);
@@ -267,27 +267,41 @@ loader.load(MODEL_URL, (gltf) => {
         }
     });
 
-    const texLoader = new THREE.TextureLoader();
-    const texMap = { 'Holografic': 'Texture/Viki_Textura.png', 'Eye': 'Texture/Eye.png', 'eyebrow': 'Texture/Brow.png' };
+    // --- MATERIAL HOLOGRAMA CRISTAL ---
     model.traverse((child) => {
-        if (child.isMesh && child.material) {
-            const matName = child.material.name;
-            const texPath = texMap[matName];
-            if (texPath) {
-                texLoader.load(texPath, (tex) => {
-                    tex.colorSpace = THREE.SRGBColorSpace;
-                    tex.flipY = false;
-                    let mat;
-                    if (matName === 'Eye') {
-                        mat = new THREE.MeshStandardMaterial({ name: 'Eye', map: tex, color: new THREE.Color(0x888888), emissive: new THREE.Color(0x000000), emissiveIntensity: 0.0, roughness: 0.5, metalness: 0.1 });
-                    } else {
-                        mat = child.material.clone();
-                        mat.map = tex;
-                    }
-                    mat.needsUpdate = true;
-                    child.material = mat;
+        if (child.isMesh) {
+            const matName = child.material?.name || '';
+            if (matName === 'Eye') {
+                child.material = new THREE.MeshBasicMaterial({
+                    name: 'Eye',
+                    color: 0xffffff,
+                    transparent: false,
+                });
+            } else if (matName === 'eyebrow') {
+                child.material = new THREE.MeshStandardMaterial({
+                    name: 'eyebrow',
+                    color: 0x00aaff,
+                    emissive: new THREE.Color(0x001133),
+                    transparent: true,
+                    opacity: 0.7,
+                    metalness: 0.8,
+                    roughness: 0.2,
+                    side: THREE.DoubleSide,
+                });
+            } else {
+                child.material = new THREE.MeshStandardMaterial({
+                    name: matName,
+                    color: 0x00d4ff,
+                    emissive: new THREE.Color(0x001122),
+                    emissiveIntensity: 0.4,
+                    transparent: true,
+                    opacity: 0.65,
+                    metalness: 1.0,
+                    roughness: 0.2,
+                    side: THREE.DoubleSide,
                 });
             }
+            child.material.needsUpdate = true;
         }
     });
 
@@ -744,13 +758,13 @@ async function initRealtime() {
                 type: 'session.update',
                 session: {
                     instructions: VIKY_IDENTITY,
-                    voice: 'shimmer',
+                    voice: 'marin',
                     input_audio_transcription: { model: 'whisper-1' },
                     turn_detection: {
                         type: 'server_vad',
-                        threshold: 0.7,
-                        prefix_padding_ms: 200,
-                        silence_duration_ms: 500,
+                        threshold: 0.95,
+                        prefix_padding_ms: 300,
+                        silence_duration_ms: 600,
                     },
                     modalities: ['text', 'audio'],
                 }
@@ -1653,7 +1667,7 @@ function animate() {
 
     updateGaze(1 / 60);
     controls.update();
-    bloomPass.strength = isSpeaking ? 0.9 + Math.sin(time * 8) * 0.1 : 0.6 + Math.sin(time * 1.5) * 0.05;
+    bloomPass.strength = isSpeaking ? 0.5 + Math.sin(time * 8) * 0.06 : 0.3 + Math.sin(time * 1.5) * 0.03;
     composer.render();
 }
 animate();
