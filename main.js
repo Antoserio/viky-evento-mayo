@@ -70,10 +70,10 @@ document.getElementById('canvas-container').appendChild(renderer.domElement);
 
 // --- POST-PROCESSING ---
 const renderScene = new RenderPass(scene, camera);
-const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-bloomPass.threshold = 0.15;
-bloomPass.strength = 0.5;
-bloomPass.radius = 0.8;
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.6, 0.4, 0.85);
+bloomPass.threshold = 0.2;
+bloomPass.strength = 0;
+bloomPass.radius = 0.5;
 const outputPass = new OutputPass();
 const composer = new EffectComposer(renderer);
 composer.addPass(renderScene);
@@ -85,16 +85,16 @@ controls.enableDamping = true;
 controls.target.set(0, 0, 0);
 
 // Luces
-const ambLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambLight);
-const faceLight = new THREE.DirectionalLight(0xffe0cc, 1.0);
+const faceLight = new THREE.PointLight(0xffaa00, 0.0, 10);
 faceLight.position.set(0, 0.5, 2);
 scene.add(faceLight);
-const backLight = new THREE.PointLight(0x00d4ff, 2.5, 10);
-backLight.position.set(0, 1, -2);
-scene.add(backLight);
-const eyeLight = new THREE.PointLight(0xffffff, 0.8, 1);
-eyeLight.position.set(0, 0.15, 0.5);
+const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
+dirLight.position.set(2, 5, 5);
+scene.add(dirLight);
+const eyeLight = new THREE.PointLight(0xffffff, 0, 0);
+eyeLight.position.set(0, 0.15, 0.8);
 scene.add(eyeLight);
 
 // --- FACE GHOST LIGHTS ---
@@ -279,12 +279,7 @@ loader.load(MODEL_URL, (gltf) => {
                     tex.flipY = false;
                     let mat;
                     if (matName === 'Eye') {
-                        mat = new THREE.MeshStandardMaterial({ name: 'Eye', map: tex, color: new THREE.Color(0xffffff), emissive: new THREE.Color(0xffffff), emissiveIntensity: 1.5, roughness: 0.3, metalness: 0.1 });
-                    } else if (matName === 'Holografic') {
-                        mat = child.material.clone();
-                        mat.map = tex;
-                        mat.emissive = new THREE.Color(0x0066ff);
-                        mat.emissiveIntensity = 0.3;
+                        mat = new THREE.MeshStandardMaterial({ name: 'Eye', map: tex, color: new THREE.Color(0x888888), emissive: new THREE.Color(0x000000), emissiveIntensity: 0.0, roughness: 0.5, metalness: 0.1 });
                     } else {
                         mat = child.material.clone();
                         mat.map = tex;
@@ -1658,7 +1653,7 @@ function animate() {
 
     updateGaze(1 / 60);
     controls.update();
-    bloomPass.strength = isSpeaking ? 0.7 + Math.sin(time * 8) * 0.06 : 0.5 + Math.sin(time * 1.5) * 0.03;
+    bloomPass.strength = isSpeaking ? 0.9 + Math.sin(time * 8) * 0.1 : 0.6 + Math.sin(time * 1.5) * 0.05;
     composer.render();
 }
 animate();
