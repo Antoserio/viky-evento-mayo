@@ -85,17 +85,23 @@ controls.enableDamping = true;
 controls.target.set(0, 0, 0);
 
 // Luces
-const ambLight = new THREE.AmbientLight(0xaaccff, 1.6);
+const ambLight = new THREE.AmbientLight(0x223355, 0.6);
 scene.add(ambLight);
 const faceLight = new THREE.PointLight(0xffaa00, 0.0, 10);
 faceLight.position.set(0, 0.5, 2);
 scene.add(faceLight);
-const dirLight = new THREE.DirectionalLight(0x88bbff, 1.4);
-dirLight.position.set(0.5, 1, 3);
+const dirLight = new THREE.DirectionalLight(0x4466aa, 0.25);
+dirLight.position.set(1, 0.5, 3);
 scene.add(dirLight);
 const eyeLight = new THREE.PointLight(0xffffff, 0, 0);
 eyeLight.position.set(0, 0.15, 0.8);
 scene.add(eyeLight);
+const fillLight = new THREE.PointLight(0x4477cc, 1.2, 4);
+fillLight.position.set(-1, 0.3, 1.5);
+scene.add(fillLight);
+const fillLight2 = new THREE.PointLight(0x2255aa, 0.8, 4);
+fillLight2.position.set(1, 0.3, 1.5);
+scene.add(fillLight2);
 
 // --- FACE GHOST LIGHTS ---
 const faceGhosts = [
@@ -126,8 +132,8 @@ function buildHUD() {
     scene.add(hudGroup);
 
     const ring1 = new THREE.Mesh(
-        new THREE.RingGeometry(1.05, 1.10, 128),
-        new THREE.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.12, side: THREE.DoubleSide, wireframe: false })
+        new THREE.RingGeometry(1.05, 1.06, 128),
+        new THREE.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.06, side: THREE.DoubleSide })
     );
     hudGroup.add(ring1);
 
@@ -197,7 +203,7 @@ function buildHUD() {
     }
     const particleGeo = new THREE.BufferGeometry();
     particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    hudGroup.add(new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: 0x00ffff, size: 0.015, transparent: true, opacity: 0.6 })));
+    hudGroup.add(new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: 0x00ffff, size: 0.025, transparent: true, opacity: 0.9 })));
 
     hudElements.push({ group: hudGroup, ring1, ring2, segGroup, scanner, rotSpeed1: 0.003, rotSpeed2: -0.005 });
     console.log('✅ HUD futurista creado');
@@ -294,11 +300,10 @@ loader.load(MODEL_URL, (gltf) => {
             } else {
                 child.material = new THREE.MeshStandardMaterial({
                     name: matName,
-                    color: 0x00d4ff,
-                    emissive: new THREE.Color(0x001122),
-                    emissiveIntensity: 0.4,
-                    transparent: true,
-                    opacity: 1.0,
+                    color: 0x1144aa,
+                    emissive: new THREE.Color(0x0044aa),
+                    emissiveIntensity: 1.2,
+                    transparent: false,
                     metalness: 1.0,
                     roughness: 0.2,
                     side: THREE.DoubleSide,
