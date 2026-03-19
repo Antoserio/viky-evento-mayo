@@ -90,8 +90,8 @@ scene.add(ambLight);
 const faceLight = new THREE.PointLight(0xffaa00, 0.0, 10);
 faceLight.position.set(0, 0.5, 2);
 scene.add(faceLight);
-const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
-dirLight.position.set(2, 5, 5);
+const dirLight = new THREE.DirectionalLight(0x4488cc, 0.6);
+dirLight.position.set(2, 2, 3);
 scene.add(dirLight);
 const eyeLight = new THREE.PointLight(0xffffff, 0, 0);
 eyeLight.position.set(0, 0.15, 0.8);
@@ -101,7 +101,7 @@ scene.add(eyeLight);
 const faceGhosts = [
     { light: new THREE.PointLight(0x00d4ff, 0.55, 2.0), baseX: -0.22, baseY: 0.05, baseZ: 0.50, phase: 0.0 },
     { light: new THREE.PointLight(0x3db89a, 0.50, 2.0), baseX: 0.22, baseY: 0.05, baseZ: 0.50, phase: 1.2 },
-    { light: new THREE.PointLight(0xffbb99, 0.35, 1.8), baseX: 0.00, baseY: 0.30, baseZ: 0.48, phase: 2.4 },
+    { light: new THREE.PointLight(0x2255aa, 0.20, 1.5), baseX: 0.00, baseY: 0.30, baseZ: 0.48, phase: 2.4 },
 ];
 faceGhosts.forEach(fg => scene.add(fg.light));
 
@@ -1658,9 +1658,9 @@ function animate() {
         hud.ring2.rotation.z += hud.rotSpeed2 * sm;
         if (hud.segGroup) hud.segGroup.rotation.z += 0.002 * sm;
         const pulse = Math.sin(time * 1.5) * 0.15 + 0.85;
-        hud.ring1.material.opacity = isSpeaking ? 0.18 : 0.07;
-        hud.ring2.material.opacity = 0.18 * pulse;
-        if (hud.scanner) { hud.scanner.rotation.z += 0.02 * sm; hud.scanner.material.opacity = 0.4 + Math.sin(time * 3) * 0.2; }
+        hud.ring1.material.opacity = isSpeaking ? 0.06 : 0.02;
+        hud.ring2.material.opacity = 0.04 * pulse;
+        if (hud.scanner) { hud.scanner.rotation.z += 0.02 * sm; hud.scanner.material.opacity = 0.12 + Math.sin(time * 3) * 0.06; }
         hud.group.rotation.x = Math.sin(time * 0.35) * 0.02;
         hud.group.rotation.y = Math.sin(time * 0.45) * 0.02;
     });
