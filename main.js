@@ -812,7 +812,12 @@ function handleRealtimeEvent(event) {
                 extractUserData(text);
 
                 const CLOSE_KW = ['cerrar', 'quita', 'cierra', 'oculta', 'stop', 'quítalo', 'quitalo'];
+                const SLEEP_KW = ['continuamos'];
                 if (CLOSE_KW.some(w => text.toLowerCase().includes(w))) hideVideo();
+                if (SLEEP_KW.some(w => text.toLowerCase().includes(w))) {
+                    sleepViki();
+                    break;
+}
 
                 if (pendingVideoId && videoOffered) {
                     if (checkUserConfirmation(text)) {
