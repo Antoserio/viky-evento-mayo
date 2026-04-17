@@ -8,7 +8,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 // --- CONFIGURACIÓN ---
 const MODEL_URL = './Viki_V3.gltf';
-const RECONNECT_MINUTES = 10; // cambiar a 55 para producción
+const RECONNECT_MINUTES = 3; // cambiar a 55 para producción
 
 // --- CÁMARA DE VISIÓN ---
 let videoStream = null;
@@ -827,6 +827,7 @@ async function reconnectRealtime() {
     if (dc) { try { dc.close(); } catch(e){} dc = null; }
     if (pc) { try { pc.close(); } catch(e){} pc = null; }
     if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+document.querySelectorAll('audio').forEach(a => { a.srcObject = null; a.remove(); });
     await initRealtime();
 }
 
