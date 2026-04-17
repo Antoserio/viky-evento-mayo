@@ -340,7 +340,7 @@ let speechStartTime = null; // para medir duración antes de interrumpir
 // =============================================================================
 let vikiAwake = false;          // false = dormida, true = activa
 let wakeWordTimer = null;       // timeout para volver a dormida
-const WAKE_TIMEOUT_MS = 45000; // 45 segundos
+const WAKE_TIMEOUT_MS = 20000; // 20 segundos
 const WAKE_WORDS = ['viki', 'vicky', 'viqui', 'wiki'];
 
 function activateViki() {
