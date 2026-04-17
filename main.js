@@ -629,7 +629,7 @@ async function initRealtime() {
     sendRealtimeEvent({
         type: 'session.update',
         session: {
-            instructions: VIKY_IDENTITY + (sessionSummary ? `\n\n[CONTEXTO DE SESIÓN ANTERIOR — NO MENCIONES ESTO ESPONTÁNEAMENTE]\n${sessionSummary}\nEspera a que te hablen, no digas nada al reconectar.` : ''),
+            instructions: VIKY_IDENTITY + (sessionSummary ? `\n\n[CONTEXTO — ESTO LO SABES Y PUEDES USARLO LIBREMENTE]\n${sessionSummary}\nEspera a que te hablen, no digas nada al reconectar.` : ''),
             voice: 'marin',
             input_audio_transcription: { model: 'whisper-1' },
             turn_detection: {
