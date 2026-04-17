@@ -8,6 +8,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 // --- CONFIGURACIÓN ---
 const MODEL_URL = './Viki_V3.gltf';
+const RECONNECT_MINUTES = 10; // cambiar a 55 para producción
 
 // --- CÁMARA DE VISIÓN ---
 let videoStream = null;
@@ -765,6 +766,30 @@ async function initRealtime() {
                 }
             });
 
+         // Inyectar historial si hay memoria de sesión anterior
+            if (sessionMessages.length > 0) {
+                console.log(`💾 Inyectando ${sessionMessages.length} mensajes de memoria...`);
+                sessionMessages.forEach(msg => {
+                    sendRealtimeEvent({
+                        type: 'conversation.item.create',
+                        item: {
+                            type: 'message',
+                            role: msg.role,
+                            content: [{ 
+                                type: msg.role === 'user' ? 'input_text' : 'text', 
+                                text: msg.content 
+                            }]
+                        }
+                    });
+                });
+            }
+
+            // Timer reconexión automática
+            if (window._reconnectTimer) clearTimeout(window._reconnectTimer);
+            window._reconnectTimer = setTimeout(() => {
+                reconnectRealtime();
+            }, RECONNECT_MINUTES * 60 * 1000);
+
             micBtn.style.background = '#FF4136';
             // Arrancar en modo dormido
             setTimeout(() => sleepViki(), 500);
@@ -794,6 +819,15 @@ async function initRealtime() {
         console.error('❌ Error Realtime:', err);
         statusEl.textContent = `❌ ${err.message}`;
     }
+}
+
+async function reconnectRealtime() {
+    console.log('🔄 Reconectando sesión Realtime...');
+    realtimeReady = false;
+    if (dc) { try { dc.close(); } catch(e){} dc = null; }
+    if (pc) { try { pc.close(); } catch(e){} pc = null; }
+    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+    await initRealtime();
 }
 
 function sendRealtimeEvent(event) {
