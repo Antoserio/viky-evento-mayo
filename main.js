@@ -131,16 +131,25 @@ function buildHUD() {
     hudGroup.position.set(0, 0.05, -0.5);
     scene.add(hudGroup);
 
-    // Rings removed — using falling particles instead
-    const ring1 = new THREE.Mesh(new THREE.RingGeometry(1.05,1.06,4), new THREE.MeshBasicMaterial({transparent:true,opacity:0}));
-    const ring2 = new THREE.Mesh(new THREE.RingGeometry(0.88,0.90,4), new THREE.MeshBasicMaterial({transparent:true,opacity:0}));
+    // ROSA — anillos principales visibles
+    const ring1 = new THREE.Mesh(
+        new THREE.RingGeometry(1.05, 1.08, 128),
+        new THREE.MeshBasicMaterial({ color: 0xff69b4, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
+    );
+    hudGroup.add(ring1);
+
+    const ring2 = new THREE.Mesh(
+        new THREE.RingGeometry(0.88, 0.90, 128),
+        new THREE.MeshBasicMaterial({ color: 0xff1493, transparent: true, opacity: 0.15, side: THREE.DoubleSide })
+    );
+    hudGroup.add(ring2);
 
     for (let i = 0; i < 48; i++) {
         if (i % 4 === 3) continue;
         const angle = (i / 48) * Math.PI * 2;
         hudGroup.add(new THREE.Mesh(
             new THREE.RingGeometry(0.97, 0.99, 1, 1, angle, (Math.PI * 2 / 48) * 0.7),
-            new THREE.MeshBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.2, side: THREE.DoubleSide })
+            new THREE.MeshBasicMaterial({ color: 0xff69b4, transparent: true, opacity: 0.2, side: THREE.DoubleSide })
         ));
     }
 
@@ -153,21 +162,35 @@ function buildHUD() {
                 new THREE.Vector3(Math.cos(angle) * innerR, Math.sin(angle) * innerR, 0),
                 new THREE.Vector3(Math.cos(angle) * 1.05, Math.sin(angle) * 1.05, 0)
             ]),
-            new THREE.LineBasicMaterial({ color: isLong ? 0x00d4ff : 0x006699, transparent: true, opacity: isLong ? 0.3 : 0.15 })
+            new THREE.LineBasicMaterial({ color: isLong ? 0xff69b4 : 0xc0006a, transparent: true, opacity: isLong ? 0.3 : 0.15 })
         ));
     }
 
-    // Arcos exteriores eliminados
+    // Arcos exteriores rosa
+    [0, Math.PI / 2, Math.PI, Math.PI * 1.5].forEach((startAngle, i) => {
+        hudGroup.add(new THREE.Mesh(
+            new THREE.RingGeometry(1.12, 1.15, 32, 1, startAngle + 0.15, Math.PI / 2 - 0.3),
+            new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff69b4 : 0xff1493, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
+        ));
+    });
 
-    const segGroup = new THREE.Group(); // eliminado visualmente
+    const segGroup = new THREE.Group();
     hudGroup.add(segGroup);
+    for (let i = 0; i < 24; i++) {
+        if (i % 3 === 2) continue;
+        const angle = (i / 24) * Math.PI * 2;
+        segGroup.add(new THREE.Mesh(
+            new THREE.RingGeometry(1.18, 1.22, 1, 1, angle, (Math.PI * 2 / 24) * 0.6),
+            new THREE.MeshBasicMaterial({ color: 0xff1493, transparent: true, opacity: 0.4, side: THREE.DoubleSide })
+        ));
+    }
 
     const scanner = new THREE.Line(
         new THREE.BufferGeometry().setFromPoints([
             new THREE.Vector3(0, 0.88, 0.01),
             new THREE.Vector3(0, 1.22, 0.01)
         ]),
-        new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.6 })
+        new THREE.LineBasicMaterial({ color: 0xff69b4, transparent: true, opacity: 0.6 })
     );
     hudGroup.add(scanner);
 
@@ -182,7 +205,7 @@ function buildHUD() {
     }
     const particleGeo = new THREE.BufferGeometry();
     particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    hudGroup.add(new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: 0x00ffff, size: 0.025, transparent: true, opacity: 0.9 })));
+    hudGroup.add(new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: 0xff69b4, size: 0.015, transparent: true, opacity: 0.6 })));
 
     hudElements.push({ group: hudGroup, ring1, ring2, segGroup, scanner, rotSpeed1: 0.003, rotSpeed2: -0.005 });
     console.log('✅ HUD futurista creado');
@@ -252,43 +275,28 @@ loader.load(MODEL_URL, (gltf) => {
         }
     });
 
-    // --- MATERIAL HOLOGRAMA CRISTAL ---
+    // --- TEXTURAS REALES (estilo Girasomnis) ---
+    const texLoader = new THREE.TextureLoader();
+    const texMap = { 'Holografic': 'Texture/Viki_Textura.png', 'Eye': 'Texture/Eye.png', 'eyebrow': 'Texture/Brow.png' };
     model.traverse((child) => {
-        if (child.isMesh) {
-            const matName = child.material?.name || '';
-            if (matName === 'Eye') {
-                child.material = new THREE.MeshStandardMaterial({
-                    name: 'Eye',
-                    color: new THREE.Color(0xddeeff),
-                    emissive: new THREE.Color(0x3366aa),
-                    emissiveIntensity: 0.8,
-                    roughness: 0.1,
-                    metalness: 0.5,
-                });
-            } else if (matName === 'eyebrow') {
-                child.material = new THREE.MeshStandardMaterial({
-                    name: 'eyebrow',
-                    color: 0x00aaff,
-                    emissive: new THREE.Color(0x001133),
-                    transparent: true,
-                    opacity: 0.7,
-                    metalness: 0.8,
-                    roughness: 0.2,
-                    side: THREE.DoubleSide,
-                });
-            } else {
-                child.material = new THREE.MeshStandardMaterial({
-                    name: matName,
-                    color: 0x00d4ff,
-                    emissive: new THREE.Color(0x002244),
-                    emissiveIntensity: 0.3,
-                    transparent: false,
-                    metalness: 1.0,
-                    roughness: 0.2,
-                    side: THREE.DoubleSide,
+        if (child.isMesh && child.material) {
+            const matName = child.material.name;
+            const texPath = texMap[matName];
+            if (texPath) {
+                texLoader.load(texPath, (tex) => {
+                    tex.colorSpace = THREE.SRGBColorSpace;
+                    tex.flipY = false;
+                    let mat;
+                    if (matName === 'Eye') {
+                        mat = new THREE.MeshStandardMaterial({ name: 'Eye', map: tex, color: new THREE.Color(0x888888), emissive: new THREE.Color(0x000000), emissiveIntensity: 0.0, roughness: 0.5, metalness: 0.1 });
+                    } else {
+                        mat = child.material.clone();
+                        mat.map = tex;
+                    }
+                    mat.needsUpdate = true;
+                    child.material = mat;
                 });
             }
-            child.material.needsUpdate = true;
         }
     });
 
