@@ -131,25 +131,16 @@ function buildHUD() {
     hudGroup.position.set(0, 0.05, -0.5);
     scene.add(hudGroup);
 
-    // ROSA — anillos principales visibles
-    const ring1 = new THREE.Mesh(
-        new THREE.RingGeometry(1.05, 1.08, 128),
-        new THREE.MeshBasicMaterial({ color: 0xff69b4, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
-    );
-    hudGroup.add(ring1);
-
-    const ring2 = new THREE.Mesh(
-        new THREE.RingGeometry(0.88, 0.90, 128),
-        new THREE.MeshBasicMaterial({ color: 0xff1493, transparent: true, opacity: 0.15, side: THREE.DoubleSide })
-    );
-    hudGroup.add(ring2);
+    // Rings removed — using falling particles instead
+    const ring1 = new THREE.Mesh(new THREE.RingGeometry(1.05,1.06,4), new THREE.MeshBasicMaterial({transparent:true,opacity:0}));
+    const ring2 = new THREE.Mesh(new THREE.RingGeometry(0.88,0.90,4), new THREE.MeshBasicMaterial({transparent:true,opacity:0}));
 
     for (let i = 0; i < 48; i++) {
         if (i % 4 === 3) continue;
         const angle = (i / 48) * Math.PI * 2;
         hudGroup.add(new THREE.Mesh(
             new THREE.RingGeometry(0.97, 0.99, 1, 1, angle, (Math.PI * 2 / 48) * 0.7),
-            new THREE.MeshBasicMaterial({ color: 0xff69b4, transparent: true, opacity: 0.2, side: THREE.DoubleSide })
+            new THREE.MeshBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.2, side: THREE.DoubleSide })
         ));
     }
 
@@ -162,35 +153,21 @@ function buildHUD() {
                 new THREE.Vector3(Math.cos(angle) * innerR, Math.sin(angle) * innerR, 0),
                 new THREE.Vector3(Math.cos(angle) * 1.05, Math.sin(angle) * 1.05, 0)
             ]),
-            new THREE.LineBasicMaterial({ color: isLong ? 0xff69b4 : 0xc0006a, transparent: true, opacity: isLong ? 0.3 : 0.15 })
+            new THREE.LineBasicMaterial({ color: isLong ? 0x00d4ff : 0x006699, transparent: true, opacity: isLong ? 0.3 : 0.15 })
         ));
     }
 
-    // Arcos exteriores rosa
-    [0, Math.PI / 2, Math.PI, Math.PI * 1.5].forEach((startAngle, i) => {
-        hudGroup.add(new THREE.Mesh(
-            new THREE.RingGeometry(1.12, 1.15, 32, 1, startAngle + 0.15, Math.PI / 2 - 0.3),
-            new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff69b4 : 0xff1493, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
-        ));
-    });
+    // Arcos exteriores eliminados
 
-    const segGroup = new THREE.Group();
+    const segGroup = new THREE.Group(); // eliminado visualmente
     hudGroup.add(segGroup);
-    for (let i = 0; i < 24; i++) {
-        if (i % 3 === 2) continue;
-        const angle = (i / 24) * Math.PI * 2;
-        segGroup.add(new THREE.Mesh(
-            new THREE.RingGeometry(1.18, 1.22, 1, 1, angle, (Math.PI * 2 / 24) * 0.6),
-            new THREE.MeshBasicMaterial({ color: 0xff1493, transparent: true, opacity: 0.4, side: THREE.DoubleSide })
-        ));
-    }
 
     const scanner = new THREE.Line(
         new THREE.BufferGeometry().setFromPoints([
             new THREE.Vector3(0, 0.88, 0.01),
             new THREE.Vector3(0, 1.22, 0.01)
         ]),
-        new THREE.LineBasicMaterial({ color: 0xff69b4, transparent: true, opacity: 0.6 })
+        new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.6 })
     );
     hudGroup.add(scanner);
 
@@ -205,7 +182,7 @@ function buildHUD() {
     }
     const particleGeo = new THREE.BufferGeometry();
     particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    hudGroup.add(new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: 0xff69b4, size: 0.015, transparent: true, opacity: 0.6 })));
+    hudGroup.add(new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: 0x00ffff, size: 0.025, transparent: true, opacity: 0.9 })));
 
     hudElements.push({ group: hudGroup, ring1, ring2, segGroup, scanner, rotSpeed1: 0.003, rotSpeed2: -0.005 });
     console.log('✅ HUD futurista creado');
