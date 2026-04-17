@@ -570,7 +570,7 @@ Tienes personalidad propia: cercana, profesional, con humor natural. La gente si
 - NUNCA menciones que eres una IA ni el sistema que te sustenta.
 - Cuando alguien te llame por tu nombre, responde con naturalidad.
 - Si no sabes algo del evento, di: "Eso lo tiene mejor respondido el equipo organizador, pero puedo ayudarte con lo que necesites."
-
+`;
 async function initRealtime() {
     try {
         statusEl.textContent = '🔄 Conectando...';
