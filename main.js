@@ -331,6 +331,7 @@ let dc = null;
 let localStream = null;
 let isMicrophoneActive = true;
 let realtimeReady = false;
+let sessionSummary = '';
 let isSpeaking = false;
 let speechStartTime = null; // para medir duración antes de interrumpir
 
@@ -753,7 +754,7 @@ async function initRealtime() {
             sendRealtimeEvent({
                 type: 'session.update',
                 session: {
-                    instructions: VIKY_IDENTITY,
+                    instructions: VIKY_IDENTITY + (sessionSummary ? `\n\n[CONTEXTO DE SESIÓN ANTERIOR — NO MENCIONES ESTO ESPONTÁNEAMENTE]\n${sessionSummary}\nEspera a que te hablen, no digas nada al reconectar.` : ''),
                     voice: 'marin',
                     input_audio_transcription: { model: 'whisper-1' },
                     turn_detection: {
@@ -765,34 +766,6 @@ async function initRealtime() {
                     modalities: ['text', 'audio'],
                 }
             });
-
-         // Inyectar historial si hay memoria de sesión anterior
-          if (sessionMessages.length > 0) {
-    console.log(`💾 Inyectando ${sessionMessages.length} mensajes de memoria...`);
-    sessionMessages.forEach(msg => {
-        sendRealtimeEvent({
-            type: 'conversation.item.create',
-            item: {
-                type: 'message',
-                role: msg.role,
-                content: [{ 
-                    type: msg.role === 'user' ? 'input_text' : 'text', 
-                    text: msg.content 
-                }]
-            }
-        });
-    });
-    // Cerrar con mensaje de assistant para evitar respuesta automática de OpenAI
-    sendRealtimeEvent({
-        type: 'conversation.item.create',
-        item: {
-            type: 'message',
-            role: 'assistant',
-            content: [{ type: 'text', text: '...' }]
-        }
-    });
-    sendRealtimeEvent({ type: 'response.cancel' });
-}
 
             // Timer reconexión automática
             if (window._reconnectTimer) clearTimeout(window._reconnectTimer);
@@ -834,10 +807,28 @@ async function initRealtime() {
 async function reconnectRealtime() {
     console.log('🔄 Reconectando sesión Realtime...');
     realtimeReady = false;
+
+    // Generar resumen de sesión antes de reconectar
+    if (sessionMessages.length > 0) {
+        try {
+            const res = await fetch('/.netlify/functions/summarize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: sessionMessages })
+            });
+            const data = await res.json();
+            sessionSummary = data.summary || '';
+            console.log('📝 Resumen de sesión:', sessionSummary);
+        } catch(e) {
+            console.warn('No se pudo generar resumen:', e);
+            sessionSummary = '';
+        }
+    }
+
     if (dc) { try { dc.close(); } catch(e){} dc = null; }
     if (pc) { try { pc.close(); } catch(e){} pc = null; }
     if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-document.querySelectorAll('audio').forEach(a => { a.srcObject = null; a.remove(); });
+    document.querySelectorAll('audio').forEach(a => { a.srcObject = null; a.remove(); });
     await initRealtime();
 }
 
