@@ -615,25 +615,25 @@ async function initRealtime() {
         // 5. DataChannel
         dc = pc.createDataChannel('oai-events');
 
-        dc.onopen = () => {
-            console.log('✅ DataChannel abierto');
-            realtimeReady = true;
-
-            sendRealtimeEvent({
-                type: 'session.update',
-                session: {
-                    instructions: VIKY_IDENTITY + (sessionSummary ? `\n\n[CONTEXTO DE SESIÓN ANTERIOR — NO MENCIONES ESTO ESPONTÁNEAMENTE]\n${sessionSummary}\nEspera a que te hablen, no digas nada al reconectar.` : ''),
-                    voice: 'marin',
-                    input_audio_transcription: { model: 'whisper-1' },
-                    turn_detection: {
-                        type: 'server_vad',
-                        threshold: 0.95,
-                        prefix_padding_ms: 300,
-                        silence_duration_ms: 600,
-                    },
-                    modalities: ['text', 'audio'],
-                }
-            });
+       dc.onopen = () => {
+    console.log('✅ DataChannel abierto');
+    realtimeReady = true;
+    console.log('🧠 sessionSummary al reconectar:', sessionSummary);
+    sendRealtimeEvent({
+        type: 'session.update',
+        session: {
+            instructions: VIKY_IDENTITY + (sessionSummary ? `\n\n[CONTEXTO DE SESIÓN ANTERIOR — NO MENCIONES ESTO ESPONTÁNEAMENTE]\n${sessionSummary}\nEspera a que te hablen, no digas nada al reconectar.` : ''),
+            voice: 'marin',
+            input_audio_transcription: { model: 'whisper-1' },
+            turn_detection: {
+                type: 'server_vad',
+                threshold: 0.95,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 600,
+            },
+            modalities: ['text', 'audio'],
+        }
+    });
 
             // Timer reconexión automática
             if (window._reconnectTimer) clearTimeout(window._reconnectTimer);
