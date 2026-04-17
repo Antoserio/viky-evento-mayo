@@ -767,22 +767,31 @@ async function initRealtime() {
             });
 
          // Inyectar historial si hay memoria de sesión anterior
-            if (sessionMessages.length > 0) {
-                console.log(`💾 Inyectando ${sessionMessages.length} mensajes de memoria...`);
-                sessionMessages.forEach(msg => {
-                    sendRealtimeEvent({
-                        type: 'conversation.item.create',
-                        item: {
-                            type: 'message',
-                            role: msg.role,
-                            content: [{ 
-                                type: msg.role === 'user' ? 'input_text' : 'text', 
-                                text: msg.content 
-                            }]
-                        }
-                    });
-                });
+          if (sessionMessages.length > 0) {
+    console.log(`💾 Inyectando ${sessionMessages.length} mensajes de memoria...`);
+    sessionMessages.forEach(msg => {
+        sendRealtimeEvent({
+            type: 'conversation.item.create',
+            item: {
+                type: 'message',
+                role: msg.role,
+                content: [{ 
+                    type: msg.role === 'user' ? 'input_text' : 'text', 
+                    text: msg.content 
+                }]
             }
+        });
+    });
+    // Cerrar con mensaje de assistant para evitar respuesta automática de OpenAI
+    sendRealtimeEvent({
+        type: 'conversation.item.create',
+        item: {
+            type: 'message',
+            role: 'assistant',
+            content: [{ type: 'text', text: '...' }]
+        }
+    });
+}
 
             // Timer reconexión automática
             if (window._reconnectTimer) clearTimeout(window._reconnectTimer);
