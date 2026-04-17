@@ -791,6 +791,7 @@ async function initRealtime() {
             content: [{ type: 'text', text: '...' }]
         }
     });
+    sendRealtimeEvent({ type: 'response.cancel' });
 }
 
             // Timer reconexión automática
