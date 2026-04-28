@@ -1,6 +1,23 @@
 exports.handler = async (event) => {
     try {
-        const { messages } = JSON.parse(event.body);
+        const { messages, passiveListening, instructions } = JSON.parse(event.body);
+
+        // Construir el prompt con mensajes activos + escucha pasiva
+        let conversationText = '';
+        
+        // Mensajes activos (lo que Viky dijo)
+        if (messages && messages.length > 0) {
+            conversationText += 'CONVERSACIONES ACTIVAS (Viky hablando):\n';
+            conversationText += JSON.stringify(messages);
+        }
+        
+        // Transcripciones pasivas (lo que Viky escuchó mientras dormía)
+        if (passiveListening && passiveListening.length > 0) {
+            conversationText += '\n\nESCUCHA PASIVA (mientras Viky dormía):\n';
+            conversationText += passiveListening.map(t => t.text).join('\n');
+        }
+
+        const systemPrompt = instructions || 'Eres un asistente que genera resúmenes de conversación muy breves. Responde SOLO con un párrafo corto en español, sin saludos ni explicaciones.';
 
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -10,15 +27,15 @@ exports.handler = async (event) => {
             },
             body: JSON.stringify({
                 model: 'gpt-4o-mini',
-                max_tokens: 200,
+                max_tokens: 300,
                 messages: [
                     {
                         role: 'system',
-                        content: 'Eres un asistente que genera resúmenes de conversación muy breves. Responde SOLO con un párrafo corto en español, sin saludos ni explicaciones.'
+                        content: systemPrompt
                     },
                     {
                         role: 'user',
-                        content: `Resume en 2-3 frases el contexto de esta conversación para que Viky sepa con quién ha hablado y de qué, sin repetir todo: ${JSON.stringify(messages)}`
+                        content: conversationText
                     }
                 ]
             }),
