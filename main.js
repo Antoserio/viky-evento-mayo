@@ -86,13 +86,13 @@ controls.enableDamping = true;
 controls.target.set(0, 0, 0);
 
 // Luces
-const ambLight = new THREE.AmbientLight(0xffffff, 0.8);
+const ambLight = new THREE.AmbientLight(0xffffff, 1.8);
 scene.add(ambLight);
 const faceLight = new THREE.PointLight(0xffaa00, 5, 10);
 faceLight.position.set(0, 1, 2);
 scene.add(faceLight);
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-dirLight.position.set(2, 3, 5);
+const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
+dirLight.position.set(0, 2, 3);
 scene.add(dirLight);
 const eyeLight = new THREE.PointLight(0xffffff, 0.1, 0);
 eyeLight.position.set(0, 0.15, 0.8);
