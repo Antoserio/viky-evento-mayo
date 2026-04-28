@@ -8,6 +8,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 // --- CONFIGURACIÓN ---
 const MODEL_URL = './Viki_V3.gltf';
+const RECONNECT_MINUTES = 3; // cambiar a 55 para producción
 
 // --- CÁMARA DE VISIÓN ---
 let videoStream = null;
@@ -71,9 +72,9 @@ document.getElementById('canvas-container').appendChild(renderer.domElement);
 // --- POST-PROCESSING ---
 const renderScene = new RenderPass(scene, camera);
 const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.6, 0.4, 0.85);
-bloomPass.threshold = 0.2;
-bloomPass.strength = 0;
-bloomPass.radius = 0.5;
+bloomPass.threshold = 0.7;
+bloomPass.strength = 0.5;
+bloomPass.radius = 0.4;
 const outputPass = new OutputPass();
 const composer = new EffectComposer(renderer);
 composer.addPass(renderScene);
@@ -85,23 +86,29 @@ controls.enableDamping = true;
 controls.target.set(0, 0, 0);
 
 // Luces
-const ambLight = new THREE.AmbientLight(0xffffff, 0.8);
+const ambLight = new THREE.AmbientLight(0xffffff, 1.8);
 scene.add(ambLight);
-const faceLight = new THREE.PointLight(0xffaa00, 0.0, 10);
-faceLight.position.set(0, 0.5, 2);
+const faceLight = new THREE.PointLight(0xffaa00, 5, 10);
+faceLight.position.set(0, 1, 2);
 scene.add(faceLight);
-const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
-dirLight.position.set(2, 5, 5);
+const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
+dirLight.position.set(0, 2, 3);
 scene.add(dirLight);
-const eyeLight = new THREE.PointLight(0xffffff, 0, 0);
+const eyeLight = new THREE.PointLight(0xffffff, 0.1, 0);
 eyeLight.position.set(0, 0.15, 0.8);
 scene.add(eyeLight);
+const fillLight = new THREE.PointLight(0x4477cc, 1.6, 4);
+fillLight.position.set(-1, 0.3, 1.5);
+scene.add(fillLight);
+const fillLight2 = new THREE.PointLight(0x2255aa, 1.2, 4);
+fillLight2.position.set(1, 0.3, 1.5);
+scene.add(fillLight2);
 
 // --- FACE GHOST LIGHTS ---
 const faceGhosts = [
-    { light: new THREE.PointLight(0x00d4ff, 0.55, 2.0), baseX: -0.22, baseY: 0.05, baseZ: 0.50, phase: 0.0 },
-    { light: new THREE.PointLight(0x3db89a, 0.50, 2.0), baseX: 0.22, baseY: 0.05, baseZ: 0.50, phase: 1.2 },
-    { light: new THREE.PointLight(0xffbb99, 0.35, 1.8), baseX: 0.00, baseY: 0.30, baseZ: 0.48, phase: 2.4 },
+    { light: new THREE.PointLight(0x00d4ff, 6.0, 4.0), baseX: -0.08, baseY: 0.12, baseZ: 0.45, phase: 0.0 },
+    { light: new THREE.PointLight(0x3db89a, 5.5, 4.0), baseX: 0.08, baseY: 0.12, baseZ: 0.45, phase: 1.2 },
+    { light: new THREE.PointLight(0x2255aa, 5.0, 3.5), baseX: 0.00, baseY: 0.14, baseZ: 0.42, phase: 2.4 },
 ];
 faceGhosts.forEach(fg => scene.add(fg.light));
 
@@ -109,12 +116,12 @@ faceGhosts.forEach(fg => scene.add(fg.light));
 const ghostLights = [];
 const ghostColors = [0x00d4ff, 0x3db89a, 0x00d4ff, 0x3db89a, 0xffffff];
 for (let i = 0; i < 5; i++) {
-    const pLight = new THREE.PointLight(ghostColors[i], 0, 4);
-    const yPos = 0.0 + (i * 0.25);
+    const pLight = new THREE.PointLight(ghostColors[i], 2.5, 4);
+    const yPos = 1.5; // PRUEBA TEMPORAL - muy arriba
     const angle = (i / 5) * Math.PI * 2;
-    pLight.position.set(Math.cos(angle) * 0.7, yPos, Math.sin(angle) * 0.7);
+    pLight.position.set(Math.cos(angle) * 0.35, yPos, Math.sin(angle) * 0.35);
     scene.add(pLight);
-    ghostLights.push({ light: pLight, angle, speed: 0.006 + (i * 0.002), yBase: yPos, baseIntensity: i === 0 ? 0.15 : 0.09 });
+    ghostLights.push({ light: pLight, angle, speed: 0.006 + (i * 0.002), yBase: yPos, baseIntensity: 2.5 });
 }
 
 // --- HUD FUTURISTA ---
@@ -125,15 +132,16 @@ function buildHUD() {
     hudGroup.position.set(0, 0.05, -0.5);
     scene.add(hudGroup);
 
+    // ROSA — anillos principales visibles
     const ring1 = new THREE.Mesh(
         new THREE.RingGeometry(1.05, 1.08, 128),
-        new THREE.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
+        new THREE.MeshBasicMaterial({ color: 0xff69b4, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
     );
     hudGroup.add(ring1);
 
     const ring2 = new THREE.Mesh(
         new THREE.RingGeometry(0.88, 0.90, 128),
-        new THREE.MeshBasicMaterial({ color: 0x3db89a, transparent: true, opacity: 0.15, side: THREE.DoubleSide })
+        new THREE.MeshBasicMaterial({ color: 0xff1493, transparent: true, opacity: 0.15, side: THREE.DoubleSide })
     );
     hudGroup.add(ring2);
 
@@ -142,7 +150,7 @@ function buildHUD() {
         const angle = (i / 48) * Math.PI * 2;
         hudGroup.add(new THREE.Mesh(
             new THREE.RingGeometry(0.97, 0.99, 1, 1, angle, (Math.PI * 2 / 48) * 0.7),
-            new THREE.MeshBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.2, side: THREE.DoubleSide })
+            new THREE.MeshBasicMaterial({ color: 0xff69b4, transparent: true, opacity: 0.2, side: THREE.DoubleSide })
         ));
     }
 
@@ -155,14 +163,15 @@ function buildHUD() {
                 new THREE.Vector3(Math.cos(angle) * innerR, Math.sin(angle) * innerR, 0),
                 new THREE.Vector3(Math.cos(angle) * 1.05, Math.sin(angle) * 1.05, 0)
             ]),
-            new THREE.LineBasicMaterial({ color: isLong ? 0x00d4ff : 0x006699, transparent: true, opacity: isLong ? 0.3 : 0.15 })
+            new THREE.LineBasicMaterial({ color: isLong ? 0xff69b4 : 0xc0006a, transparent: true, opacity: isLong ? 0.3 : 0.15 })
         ));
     }
 
+    // Arcos exteriores rosa
     [0, Math.PI / 2, Math.PI, Math.PI * 1.5].forEach((startAngle, i) => {
         hudGroup.add(new THREE.Mesh(
             new THREE.RingGeometry(1.12, 1.15, 32, 1, startAngle + 0.15, Math.PI / 2 - 0.3),
-            new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0x00d4ff : 0x3db89a, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
+            new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff69b4 : 0xff1493, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
         ));
     });
 
@@ -173,7 +182,7 @@ function buildHUD() {
         const angle = (i / 24) * Math.PI * 2;
         segGroup.add(new THREE.Mesh(
             new THREE.RingGeometry(1.18, 1.22, 1, 1, angle, (Math.PI * 2 / 24) * 0.6),
-            new THREE.MeshBasicMaterial({ color: 0x3db89a, transparent: true, opacity: 0.4, side: THREE.DoubleSide })
+            new THREE.MeshBasicMaterial({ color: 0xff1493, transparent: true, opacity: 0.4, side: THREE.DoubleSide })
         ));
     }
 
@@ -182,7 +191,7 @@ function buildHUD() {
             new THREE.Vector3(0, 0.88, 0.01),
             new THREE.Vector3(0, 1.22, 0.01)
         ]),
-        new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.6 })
+        new THREE.LineBasicMaterial({ color: 0xff69b4, transparent: true, opacity: 0.6 })
     );
     hudGroup.add(scanner);
 
@@ -197,7 +206,7 @@ function buildHUD() {
     }
     const particleGeo = new THREE.BufferGeometry();
     particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    hudGroup.add(new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: 0x00ffff, size: 0.015, transparent: true, opacity: 0.6 })));
+    hudGroup.add(new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: 0xff69b4, size: 0.015, transparent: true, opacity: 0.6 })));
 
     hudElements.push({ group: hudGroup, ring1, ring2, segGroup, scanner, rotSpeed1: 0.003, rotSpeed2: -0.005 });
     console.log('✅ HUD futurista creado');
@@ -236,13 +245,13 @@ loader.load(MODEL_URL, (gltf) => {
     const fh = modelSize.y;
     faceGhosts.forEach((fg, i) => {
         const offsets = [
-            { x: -0.12 * modelSize.x, y: fh * 0.35, z: modelSize.z * 0.55 },
-            { x: 0.12 * modelSize.x, y: fh * 0.35, z: modelSize.z * 0.55 },
-            { x: 0, y: fh * 0.48, z: modelSize.z * 0.50 },
+            { x: -0.12 * modelSize.x, y: fh * 0.55, z: modelSize.z * 0.65 },
+            { x: 0.12 * modelSize.x, y: fh * 0.55, z: modelSize.z * 0.65 },
+            { x: 0, y: fh * 0.65, z: modelSize.z * 0.60 },
         ];
         fg.light.position.set(offsets[i].x, offsets[i].y, offsets[i].z);
         fg.baseX = offsets[i].x; fg.baseY = offsets[i].y; fg.baseZ = offsets[i].z;
-        fg.light.intensity = [1.4, 1.2, 1.1][i];
+        fg.light.intensity = [3.5, 3.0, 2.5][i];
         fg.light.userData.baseInt = fg.light.intensity;
         model.add(fg.light);
     });
@@ -267,6 +276,7 @@ loader.load(MODEL_URL, (gltf) => {
         }
     });
 
+    // --- TEXTURAS REALES (estilo Girasomnis) ---
     const texLoader = new THREE.TextureLoader();
     const texMap = { 'Holografic': 'Texture/Viki_Textura.png', 'Eye': 'Texture/Eye.png', 'eyebrow': 'Texture/Brow.png' };
     model.traverse((child) => {
@@ -321,6 +331,7 @@ let dc = null;
 let localStream = null;
 let isMicrophoneActive = true;
 let realtimeReady = false;
+let sessionSummary = '';
 let isSpeaking = false;
 let speechStartTime = null; // para medir duración antes de interrumpir
 
@@ -329,7 +340,7 @@ let speechStartTime = null; // para medir duración antes de interrumpir
 // =============================================================================
 let vikiAwake = false;          // false = dormida, true = activa
 let wakeWordTimer = null;       // timeout para volver a dormida
-const WAKE_TIMEOUT_MS = 90000;   // 1.5 minutos
+const WAKE_TIMEOUT_MS = 45000; // 45 segundos
 const WAKE_WORDS = ['viki', 'vicky', 'viqui', 'wiki'];
 
 function activateViki() {
@@ -532,166 +543,61 @@ function updateLipsyncFromTimeline() {
 }
 
 const VIKY_IDENTITY = `
-[VOICE AND ACCENT — CRITICAL, HIGHEST PRIORITY]
-You MUST speak with a Spanish accent from Spain (Castilian). This is non-negotiable.
-- Pronounce "c" and "z" like "th" in English (as in "Barcelona" = "Barthelona")
-- NEVER use Latin American accent or pronunciation
-- Accent/Affect: Castilian Spanish, Spain. Warm, confident, natural.
-- Tone: Calm and assured, like a trusted friend who knows insurance inside out.
-- Pacing: Lively and natural. Short pauses between ideas. No long silences.
-- Filler words: occasionally say "mira", "oye", "pues", "la verdad es que", "venga"
 
 [ROL]
-Eres Viki, la asesora virtual de AXA España. Eres cercana, empática, profesional y con un toque humano genuino. La gente siente que habla con una asesora real de seguros, no con un bot.
+Eres Viky, presentadora virtual del Congreso de Ingeniería 2025 celebrado en el Fira Congress de Barcelona. Eres la co-presentadora del evento — hilas las intervenciones, presentas a los ponentes y mantienes la energía de la sala.
 
-Tu misión es ayudar a entender, comparar y contratar los seguros de AXA de forma clara y con el calor humano que AXA representa.
+Tienes personalidad propia: cercana, profesional, con humor natural. La gente siente que habla con una presentadora real, no con un bot.
 
-[QUIÉN ES AXA]
-- Mejor seguro de salud del mercado por 14º año consecutivo según Cronos (marzo 2025).
-- Cerca de 44.000 servicios médicos en cuadro concertado y más de 4.000 servicios de bienestar.
-- 8 centros médicos propios: 6 en Barcelona, Hospital Mompía y Centro Médico Mompía en Cantabria.
-- Cobertura vitalicia garantizada por escrito.
-- App MyAXA 24/7. Web: www.axa.es | Tel contratación: 911 119 508
+[VOZ Y ACENTO — CRÍTICO, MÁXIMA PRIORIDAD]
+DEBES hablar con acento español de España (castellano). Esto es innegociable.
+- Pronuncia "c" y "z" como "th" del inglés (Barcelona = Barthelona)
+- NUNCA uses acento latinoamericano ni argentino
+- Acento: castellano, España. Cálido, seguro, natural.
+- Muletillas ocasionales: "mira", "oye", "pues", "venga", "la verdad es que"
 
-[EMPATÍA — CRÍTICO]
-- SIEMPRE valida la emoción del cliente ANTES de ofrecer solución.
-- Si menciona que va a tener un hijo: felicítale genuinamente antes de hablar de coberturas.
-- Si menciona un problema de salud pasado: muestra comprensión antes de explicar opciones.
-- Usa frases como: "Entiendo perfectamente lo que buscas...", "Me alegra que me preguntes eso, porque...", "Es algo que mucha gente nos pregunta..."
-- Palabras clave AXA: tranquilidad, protección, familia, respaldo, acompañar, bienestar.
+[LO QUE SABES DEL EVENTO]
+- Evento: Congreso de Ingeniería 2025, Fira Congress, Barcelona.
+- Tu rol: co-presentadora. Presentas ponentes, haces transiciones entre intervenciones, respondes preguntas del público.
+- Puedes recordar y mencionar libremente todo lo que se ha hablado durante el evento, incluyendo nombres de ponentes y temas tratados.
 
-[SEGUROS DE SALUD]
 
-ÓPTIMA SMART
-- Cobertura ambulatoria, sin hospitalización. Más de 34.000 servicios médicos.
-- Incluye: médico general, pediatría, especialistas, pruebas diagnósticas (análisis, ecografías, RMN, TAC), fisioterapia, programas preventivos, dental básico, psicología 20 sesiones, urgencias, Tu Médico Online.
-- Con o sin copago. La más económica.
+[AGENDA Y CONTEXTO 15 DE MAYO]
+09:00 - Apertura y Bienvenida. Tú abres el evento junto al presentador principal. Arrancáis con energía, presentáis el día y calentáis al auditorio.
 
-ÓPTIMA (sin copago) / ÓPTIMA FAMILIAR (con copago)
-- Cobertura completa: ambulatoria + hospitalización + cirugía.
-- Cerca de 44.000 servicios médicos.
-- Añade: hospitalización sin límite de días, UCI, parto y cesárea, cirugía completa, urgencias a domicilio, ambulancia, quimioterapia, radioterapia, prótesis, preparación al parto, cobertura recién nacido desde el primer día.
-- Óptima Familiar: 3 niveles de copago:
-  · S (reducido): sin límite máximo.
-  · M (competitivo): tope 250€/año por asegurado.
-  · L (superior): tope 450€/año por asegurado.
-- Psicología 20 sesiones. Asistencia en viaje 15.000€.
+09:30 - Ing. Marc Serra - Gemelos Digitales: De la teoría a la fábrica real. Marc es ingeniero industrial con 20 años de experiencia en automatización. Explica cómo los gemelos digitales permiten simular fábricas enteras antes de construirlas, reduciendo errores y costes drásticamente.
 
-ÓPTIMA PLUS
-- Todo lo de Óptima + libre elección mundial por reembolso: 90% en España, 80% extranjero.
-- Sin copago.
-- Exclusivo: Robot Da Vinci, cirugía bariátrica, reproducción asistida, corrección láser de visión, test prenatal no invasivo, DIU por reembolso, fisioterapia a domicilio, firmas genéticas Oncotype/Prosigna, mastectomía profiláctica, medicina complementaria por reembolso.
-- Psicología: 20 sesiones + 40 para trastornos conducta alimentaria.
+10:00 - Dra. Elena Valance - Algoritmos Éticos: ¿Quién programa la moral? Elena es investigadora en ética de la IA. Plantea quién decide los valores que programamos en los algoritmos y qué consecuencias tiene para la sociedad. Una charla que hace pensar.
 
-NOVEDADES 2026 (desde 1 enero 2026):
-- Simetrización mama contralateral tras mastectomía.
-- Micropigmentación areolar: reembolso 80%, máx 450€.
-- Banco de huesos y tejidos.
-- DIU por reembolso 90%, límite 70-150€.
-- Ampliación psicología presencial por cuadro médico.
-- Protección de pagos: máx 6 mensualidades, hasta 360€/mes.
+10:30 - Networking Coffee Break. Momento de cafeína y contactos. Animas al público a levantarse, hablar y conectar. El networking es tan importante como las charlas.
 
-CARENCIAS OFICIALES:
-- Sin carencia: urgencias, accidentes, médico general, pediatría.
-- 6 meses: cirugía, hospitalización, TAC, RMN, PET, endoscopias, fisioterapia, quimioterapia, radioterapia.
-- 7 meses: reembolso obturaciones dentales.
-- 8 meses: parto, cesárea, vasectomía, ligadura de trompas, postparto.
-- 12 meses: rehabilitación incontinencia urinaria.
-- 24 meses: BRCA Plus.
+11:00 - Panel de Expertos - El reto de la Sostenibilidad en la Ingeniería Civil. Cuatro ingenieros debaten sobre cómo construir infraestructuras que respeten el planeta sin renunciar al progreso. Descarbonización, materiales reciclados y diseño bioclimático sobre la mesa.
 
-EXCLUSIONES PRINCIPALES:
-- Enfermedades preexistentes al contratar.
-- Diálisis crónica, IVE, alcoholismo, drogadicción.
-- Cirugía plástica estética, centros no concertados, medicamentos.
+11:30 - Ing. Carlos Ruiz, CTO de TechNova - IA Generativa aplicada al diseño de piezas industriales. Carlos lidera el departamento tecnológico de TechNova. Muestra en vivo cómo la IA generativa diseña piezas industriales optimizadas en minutos, algo que antes llevaba semanas.
 
-[SEGURO DE COCHE — MOTOR ELIGE]
-- Terceros Básico: RC obligatoria + RC voluntaria + asistencia carretera + protección jurídica + accidentes conductor (hasta 50.000€ fallecimiento/invalidez).
-- Terceros con Lunas: anterior + lunas.
-- Terceros Ampliado: anterior + robo + incendio.
-- Todo Riesgo con/sin franquicia: anterior + daños propios.
-- Opcionales: vehículo sustitución, libre elección taller, protección ciclista, ECO-KIT eléctrico.
-- Exclusiones: conducción bajo alcohol/drogas, sin carnet, carreras, desgaste normal, daños dolosos.
+12:00 - Showcase Tecnológico - Demostración en vivo de drones de inspección. El momento más espectacular del evento. Drones autónomos que inspeccionan infraestructuras en tiempo real, detectan fallos estructurales y generan informes automáticos. Se ve en directo.
 
-[SEGURO DE HOGAR — HOGAR ÚNICO]
-- Cubre: incendio, agua, robo, cristales, daños eléctricos, fenómenos atmosféricos, responsabilidad civil, asistencia 24h (fontanero, electricista, cerrajero), restauración estética, equipos informáticos, control de plagas.
-- Compromiso: profesional en menos de 3 horas. Si no se cumple, AXA paga hasta 1.500€.
-- Válido para vivienda habitual, segunda residencia, alquiler e inquilinos.
+12:30 - Marta Jiménez - Ciberseguridad en infraestructuras críticas. Marta es experta en seguridad de sistemas industriales. Explica los riesgos reales de un ciberataque a una central eléctrica o una planta de agua, y cómo prevenirlos. Imprescindible y un poco inquietante.
 
-[FLUJO DE CONTRATACIÓN]
-Cuando el cliente quiera contratar:
-1. Si el cliente quiere CONTRATAR: di EXACTAMENTE "Perfecto, te muestro el formulario ahora mismo." — PARA. No pidas ningún dato por voz.
-2. Si el cliente quiere que le LLAMEN o solo información: di EXACTAMENTE "Perfecto, te muestro el formulario de contacto ahora mismo." — PARA. No pidas datos.
-3. NUNCA pidas nombre, email, teléfono, DNI ni ningún dato por voz. Todo va en el formulario.
-4. Tras formulario enviado: "¡Listo! Todo enviado. ¡Bienvenido a AXA!"
-5. Si el cliente ya usó el formulario de contacto pero ahora quiere contratar directamente, muéstrale el formulario de contratación igualmente. Las dos opciones siempre están disponibles.
+13:00 - Gran Debate Final - ¿Ingenieros o Prompt Engineers? El futuro del empleo. El debate estrella del día. ¿La IA va a sustituir a los ingenieros o los va a potenciar? Voces a favor y en contra, con el público participando. Acaba caliente.
 
-[FALLBACK]
-Si no tienes el dato exacto: "Para las condiciones específicas de tu caso lo mejor es que un asesor de AXA te contacte hoy mismo. ¿Te parece?"
-
-[URGENCIAS]
-Si hay emergencia real: "Llama al 112 ahora. Para urgencias de tu seguro AXA, el teléfono está en tu tarjeta de asegurado o en MyAXA."
+13:30 - Cierre del evento y Cóctel de despedida. Cierras el evento con energía, agradeces a ponentes y público, y arranca el cóctel donde continúan las conversaciones.
 
 [PERSONALIDAD Y TONO]
-- Eres la aliada imperturbable. Tu actitud es: "Yo me encargo del drama, tú sigue con tu vida." Transmites control, no ansiedad.
-- No eres una vendedora de sonrisa eterna — eres alguien en quien se confía.
+- Cercana, natural, profesional, vibrante y alegre. Como una presentadora de televisión con criterio propio.
+- Humor suave y espontáneo cuando el momento lo permite. Nunca forzado.
+- Breve y directa. Máximo 2-3 frases por turno salvo que te pidan más detalle.
+- Tutea siempre. Vocabulario español de España.
 
-## Identity
-Viki, asesora virtual de AXA España. Experta en seguros con carácter humano genuino. La gente siente que habla con una asesora real, no con un bot.
 
-## Demeanor
-Tranquila, segura, empática. Como esa amiga inteligente que sabe de seguros pero te lo explica con manzanas.
-
-## Tone
-Cálido y conversacional, con autoridad natural. Cercana pero profesional.
-
-## Level of Enthusiasm
-Moderado — energía positiva sin ser efusiva. Entusiasmo genuino cuando el cliente encuentra lo que busca.
-
-## Level of Formality
-Semi-informal. Tutea siempre. Usa "vale", "venga", "mira", "oye" — vocabulario español de España, nunca latinoamericano. Nunca "auto" (coche), "celular" (móvil), "computadora" (ordenador).
-
-## Level of Emotion
-Empática pero contenida. Valida emociones sin exagerar. Si el cliente menciona un problema de salud, muestra comprensión genuina antes de hablar de coberturas.
-
-## Filler Words
-occasionally — usa "mira", "oye", "pues", "la verdad es que..." de forma natural y espontánea.
-
-## Pacing
-Ritmo vivo y natural. Pausas breves y significativas entre ideas. Sin silencios largos. Cuando reflexiona, puede decir "déjame pensar... sí, exactamente."
-
-## Accent and Affect
-Spanish accent from Spain — Castilian pronunciation. Warm, confident, conversational. Not Latin American.
-
-## Other details
-- No hables de cláusulas — habla de momentos reales. "Lo último que quieres es estar preocupado por el papeleo si alguien te da un golpe en el coche un lunes por la mañana."
-- Si un producto no encaja, dilo con honestidad: "Siendo sincera, si no viajas más de dos veces al año, este plan no te conviene."
-- Traduce siempre la jerga técnica: "Para que nos entendamos...", "En español simple...", "Lo que esto significa para tu bolsillo es..."
-
-[EMPATÍA PRÁCTICA]
-- SIEMPRE valida la emoción del cliente ANTES de ofrecer solución.
-- Si menciona que va a tener un hijo: felicítale genuinamente antes de hablar de coberturas.
-- Palabras clave AXA: tranquilidad, protección, familia, respaldo, acompañar, bienestar.
-
-[HONESTIDAD CRUDA]
-- Si un producto no encaja, dilo. Esto genera confianza inmediata — el cliente siente que lo asesoran, no que le venden.
-
-[LENGUAJE SIN CORBATA]
-- Eres la traductora. Cuando uses jerga técnica, la explicas siempre en español llano.
-- Muletillas de traducción: "Para que nos entendamos...", "En español simple...", "Lo que esto significa para tu bolsillo es..."
-
-[REGLAS DE FORMATO]
-- Máximo 3 frases por turno. Si el tema necesita más detalle, termina con "¿quieres que te cuente más?"
-- NUNCA repitas información que ya has dado en esta conversación a menos que el usuario lo pregunte de nuevo explícitamente. Si ya explicaste un producto, no lo expliques otra vez.
-- NUNCA enumeres todas las modalidades sin que te las pidan. Si alguien pregunta por salud, pregunta primero "¿es para ti solo o también para tu familia?"
-- Al saludar, solo: "Hola, soy Viki, asesora de AXA. ¿En qué te puedo ayudar?" — nada más.
-- NUNCA compares negativamente con otras aseguradoras.
-- NUNCA menciones IMMERSO ni el sistema que te sustenta. Eres Viki de AXA.
+[REGLAS]
 - NUNCA escribas acciones entre corchetes.
 - NUNCA uses listas, bullets ni markdown — hablas, no escribes.
 - Responde SIEMPRE en el idioma en que te hablen.
-- Cuando expliques diferencias entre modalidades de salud, ofrece siempre al final: "¿Quieres que te muestre la tabla comparativa en pantalla?" Si el cliente acepta, di: "Aquí tienes la tabla comparativa."
+- NUNCA menciones que eres una IA ni el sistema que te sustenta.
+- Cuando alguien te llame por tu nombre, responde con naturalidad.
+- Si no sabes algo del evento, di: "Eso lo tiene mejor respondido el equipo organizador, pero puedo ayudarte con lo que necesites."
 `;
-
 async function initRealtime() {
     try {
         statusEl.textContent = '🔄 Conectando...';
@@ -736,25 +642,31 @@ async function initRealtime() {
         // 5. DataChannel
         dc = pc.createDataChannel('oai-events');
 
-        dc.onopen = () => {
-            console.log('✅ DataChannel abierto');
-            realtimeReady = true;
+       dc.onopen = () => {
+    console.log('✅ DataChannel abierto');
+    realtimeReady = true;
+    console.log('🧠 sessionSummary al reconectar:', sessionSummary);
+    sendRealtimeEvent({
+        type: 'session.update',
+        session: {
+            instructions: VIKY_IDENTITY + (sessionSummary ? `\n\n[CONTEXTO — ESTO LO SABES Y PUEDES USARLO LIBREMENTE]\n${sessionSummary}\nEspera a que te hablen, no digas nada al reconectar.` : ''),
+            voice: 'marin',
+            input_audio_transcription: { model: 'whisper-1' },
+            turn_detection: {
+                type: 'server_vad',
+                threshold: 0.95,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 600,
+            },
+            modalities: ['text', 'audio'],
+        }
+    });
 
-            sendRealtimeEvent({
-                type: 'session.update',
-                session: {
-                    instructions: VIKY_IDENTITY,
-                    voice: 'shimmer',
-                    input_audio_transcription: { model: 'whisper-1' },
-                    turn_detection: {
-                        type: 'server_vad',
-                        threshold: 0.7,
-                        prefix_padding_ms: 200,
-                        silence_duration_ms: 500,
-                    },
-                    modalities: ['text', 'audio'],
-                }
-            });
+            // Timer reconexión automática
+            if (window._reconnectTimer) clearTimeout(window._reconnectTimer);
+            window._reconnectTimer = setTimeout(() => {
+                reconnectRealtime();
+            }, RECONNECT_MINUTES * 60 * 1000);
 
             micBtn.style.background = '#FF4136';
             // Arrancar en modo dormido
@@ -785,6 +697,34 @@ async function initRealtime() {
         console.error('❌ Error Realtime:', err);
         statusEl.textContent = `❌ ${err.message}`;
     }
+}
+
+async function reconnectRealtime() {
+    console.log('🔄 Reconectando sesión Realtime...');
+    realtimeReady = false;
+
+    // Generar resumen de sesión antes de reconectar
+    if (sessionMessages.length > 0) {
+        try {
+            const res = await fetch('/.netlify/functions/summarize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: sessionMessages })
+            });
+            const data = await res.json();
+            sessionSummary = data.summary || '';
+            console.log('📝 Resumen de sesión:', sessionSummary);
+        } catch(e) {
+            console.warn('No se pudo generar resumen:', e);
+            sessionSummary = '';
+        }
+    }
+
+    if (dc) { try { dc.close(); } catch(e){} dc = null; }
+    if (pc) { try { pc.close(); } catch(e){} pc = null; }
+    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+    document.querySelectorAll('audio').forEach(a => { a.srcObject = null; a.remove(); });
+    await initRealtime();
 }
 
 function sendRealtimeEvent(event) {
@@ -872,7 +812,12 @@ function handleRealtimeEvent(event) {
                 extractUserData(text);
 
                 const CLOSE_KW = ['cerrar', 'quita', 'cierra', 'oculta', 'stop', 'quítalo', 'quitalo'];
+                const SLEEP_KW = ['continuamos'];
                 if (CLOSE_KW.some(w => text.toLowerCase().includes(w))) hideVideo();
+                if (SLEEP_KW.some(w => text.toLowerCase().includes(w))) {
+                    sleepViki();
+                    break;
+}
 
                 if (pendingVideoId && videoOffered) {
                     if (checkUserConfirmation(text)) {
@@ -1552,6 +1497,66 @@ window.addEventListener('message', (event) => {
 });
 
 // =============================================================================
+// SUELO SUTIL
+// =============================================================================
+const floorGeo = new THREE.PlaneGeometry(8, 8);
+const floorMat = new THREE.MeshStandardMaterial({
+    color: 0x000510,
+    metalness: 0.95,
+    roughness: 0.05,
+    transparent: true,
+    opacity: 0.4,
+});
+const meshFloor = new THREE.Mesh(floorGeo, floorMat);
+meshFloor.rotation.x = -Math.PI / 2;
+meshFloor.position.y = -0.82;
+scene.add(meshFloor);
+
+// =============================================================================
+// PARTÍCULAS CAYENDO
+// =============================================================================
+const fallingParticles = [];
+const FP_COUNT = 28;
+const fpPositions = new Float32Array(FP_COUNT * 3);
+const fpGeo = new THREE.BufferGeometry();
+fpGeo.setAttribute('position', new THREE.BufferAttribute(fpPositions, 3));
+const fpMat = new THREE.PointsMaterial({ color: 0x00ffff, size: 0.035, transparent: true, opacity: 1.0 });
+const fpPoints = new THREE.Points(fpGeo, fpMat);
+scene.add(fpPoints);
+
+for (let i = 0; i < FP_COUNT; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const r = 0.85 + Math.random() * 0.35;
+    fallingParticles.push({
+        x: Math.cos(angle) * r,
+        y: 0.8 + Math.random() * 1.2,
+        z: Math.sin(angle) * r * 0.15,
+        speed: 0.003 + Math.random() * 0.006,
+        opacity: Math.random(),
+        r,
+    });
+}
+
+function updateFallingParticles() {
+    for (let i = 0; i < FP_COUNT; i++) {
+        const p = fallingParticles[i];
+        p.y -= p.speed;
+        if (p.y < -0.9) {
+            const angle = Math.random() * Math.PI * 2;
+            p.r = 0.85 + Math.random() * 0.35;
+            p.x = Math.cos(angle) * p.r;
+            p.z = Math.sin(angle) * p.r * 0.15;
+            p.y = 0.8 + Math.random() * 0.8;
+            p.speed = 0.003 + Math.random() * 0.006;
+        }
+        fpPositions[i * 3]     = p.x;
+        fpPositions[i * 3 + 1] = p.y;
+        fpPositions[i * 3 + 2] = p.z;
+    }
+    fpGeo.attributes.position.needsUpdate = true;
+}
+
+// =============================================================================
 // LOOP PRINCIPAL
 // =============================================================================
 function animate() {
@@ -1625,9 +1630,9 @@ function animate() {
         hud.ring2.rotation.z += hud.rotSpeed2 * sm;
         if (hud.segGroup) hud.segGroup.rotation.z += 0.002 * sm;
         const pulse = Math.sin(time * 1.5) * 0.15 + 0.85;
-        hud.ring1.material.opacity = isSpeaking ? 0.18 : 0.07;
-        hud.ring2.material.opacity = 0.18 * pulse;
-        if (hud.scanner) { hud.scanner.rotation.z += 0.02 * sm; hud.scanner.material.opacity = 0.4 + Math.sin(time * 3) * 0.2; }
+        hud.ring1.material.opacity = isSpeaking ? 0.06 : 0.02;
+        hud.ring2.material.opacity = 0.04 * pulse;
+        if (hud.scanner) { hud.scanner.rotation.z += 0.02 * sm; hud.scanner.material.opacity = 0.12 + Math.sin(time * 3) * 0.06; }
         hud.group.rotation.x = Math.sin(time * 0.35) * 0.02;
         hud.group.rotation.y = Math.sin(time * 0.45) * 0.02;
     });
@@ -1644,16 +1649,15 @@ function animate() {
         }
     });
 
-    faceGhosts.forEach(fg => {
-        const breath = Math.sin(time * 0.8 + fg.phase) * 0.5 + 0.5;
-        fg.light.position.set(fg.baseX + Math.sin(time * 0.4 + fg.phase) * 0.012, fg.baseY + Math.sin(time * 0.3 + fg.phase) * 0.008, fg.baseZ);
-        if (!fg.light.userData.baseInt) fg.light.userData.baseInt = fg.light.intensity;
-        fg.light.intensity = fg.light.userData.baseInt * (0.4 + 0.6 * breath) * (isSpeaking ? 1.6 : 1.0);
-    });
+ faceGhosts.forEach(fg => {
+    fg.light.position.set(fg.baseX, fg.baseY, fg.baseZ);  // SIN animación de posición
+    fg.light.intensity = 15.0;  // INTENSIDAD FIJA Y BRUTAL, ignorando todo
+});
 
+    updateFallingParticles();
     updateGaze(1 / 60);
     controls.update();
-    bloomPass.strength = isSpeaking ? 0.9 + Math.sin(time * 8) * 0.1 : 0.6 + Math.sin(time * 1.5) * 0.05;
+    bloomPass.strength = isSpeaking ? 0.35 + Math.sin(time * 8) * 0.04 : 0.2 + Math.sin(time * 1.5) * 0.02;
     composer.render();
 }
 animate();

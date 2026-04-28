@@ -332,6 +332,7 @@ let localStream = null;
 let isMicrophoneActive = true;
 let realtimeReady = false;
 let sessionSummary = '';
+let passiveTranscriptions = [];
 let isSpeaking = false;
 let speechStartTime = null; // para medir duración antes de interrumpir
 
@@ -704,21 +705,28 @@ async function reconnectRealtime() {
     realtimeReady = false;
 
     // Generar resumen de sesión antes de reconectar
-    if (sessionMessages.length > 0) {
-        try {
-            const res = await fetch('/.netlify/functions/summarize', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: sessionMessages })
-            });
-            const data = await res.json();
-            sessionSummary = data.summary || '';
-            console.log('📝 Resumen de sesión:', sessionSummary);
-        } catch(e) {
-            console.warn('No se pudo generar resumen:', e);
-            sessionSummary = '';
-        }
+if (sessionMessages.length > 0 || passiveTranscriptions.length > 0) {
+    try {
+        const res = await fetch('/.netlify/functions/summarize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                messages: sessionMessages,
+                passiveListening: passiveTranscriptions,
+                instructions: 'Resume en máximo 250 palabras: (1) Lo que Viky dijo activamente. (2) Lo que escuchó mientras estaba dormida (charlas del ponente, conversaciones cercanas, temas mencionados). Incluye punto de la agenda si se mencionó y cualquier nombre de persona relevante.'
+            })
+        });
+        const data = await res.json();
+        sessionSummary = data.summary || '';
+        console.log('📝 Resumen de sesión:', sessionSummary);
+    } catch(e) {
+        console.warn('No se pudo generar resumen:', e);
+        sessionSummary = '';
     }
+}
+
+// Limpiar transcripciones pasivas después de resumir
+passiveTranscriptions = [];
 
     if (dc) { try { dc.close(); } catch(e){} dc = null; }
     if (pc) { try { pc.close(); } catch(e){} pc = null; }
@@ -803,7 +811,23 @@ function handleRealtimeEvent(event) {
                         });
                         sendRealtimeEvent({ type: 'response.create' });
                     }
-                    break; // dormida — ignorar todo lo demás
+                   if (!vikiAwake) {
+    if (checkWakeWord(text)) {
+        activateViki();
+        // Enviar el texto con instrucción de idioma explícita
+        sendRealtimeEvent({
+            type: 'conversation.item.create',
+            item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: `[RESPONDE EN EL IDIOMA DE ESTE MENSAJE] ${text}` }] }
+        });
+        sendRealtimeEvent({ type: 'response.create' });
+    } else {
+        // Guardar lo que escucha dormida
+        if (text) {
+            passiveTranscriptions.push({timestamp: Date.now(), text: text});
+        }
+    }
+    break; // dormida — no procesa más
+}
                 }
 
                 // Activa — resetear timer y procesar normalmente
@@ -842,22 +866,28 @@ function handleRealtimeEvent(event) {
             }
             break;
 
-        case 'input_audio_buffer.speech_started':
-            if (vikiAwake) resetWakeTimer();
-            speechStartTime = Date.now(); // registrar cuándo empezó el habla
-            if (!isSpeaking) applyExpression('listening');
-            break;
-
-        case 'input_audio_buffer.speech_stopped':
-            if (!vikiAwake) break; // dormida — ignorar
-            // Dejar que el VAD de OpenAI gestione la interrupción automáticamente
-            speechStartTime = null;
-            if (!isSpeaking) {
-                applyExpression('thinking');
-                loadingEl.classList.remove('hidden');
-                loadingEl.textContent = 'Viky está pensando...';
-            }
-            break;
+       case 'input_audio_buffer.speech_started':
+    if (vikiAwake) resetWakeTimer();
+    speechStartTime = Date.now(); // registrar cuándo empezó el habla
+    if (!isSpeaking) applyExpression('listening');
+    break;
+case 'input_audio_buffer.speech_stopped':
+    if (!vikiAwake) {
+        // Guardar transcripción aunque esté dormida
+        const audioTranscript = event.transcript?.trim();
+        if (audioTranscript) {
+            passiveTranscriptions.push({timestamp: Date.now(), text: audioTranscript});
+        }
+        break;
+    }
+    // Dejar que el VAD de OpenAI gestione la interrupción automáticamente
+    speechStartTime = null;
+    if (!isSpeaking) {
+        applyExpression('thinking');
+        loadingEl.classList.remove('hidden');
+        loadingEl.textContent = 'Viky está pensando...';
+    }
+    break;
 
         case 'response.audio_transcript.delta': {
             const deltaText = event.delta || '';
