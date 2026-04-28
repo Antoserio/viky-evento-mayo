@@ -72,8 +72,8 @@ document.getElementById('canvas-container').appendChild(renderer.domElement);
 // --- POST-PROCESSING ---
 const renderScene = new RenderPass(scene, camera);
 const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.6, 0.4, 0.85);
-bloomPass.threshold = 0.8;
-bloomPass.strength = 0.35;
+bloomPass.threshold = 0.7;
+bloomPass.strength = 0.5;
 bloomPass.radius = 0.4;
 const outputPass = new OutputPass();
 const composer = new EffectComposer(renderer);
