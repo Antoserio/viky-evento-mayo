@@ -106,9 +106,9 @@ scene.add(fillLight2);
 
 // --- FACE GHOST LIGHTS ---
 const faceGhosts = [
-    { light: new THREE.PointLight(0x00d4ff, 5.0, 4.0), baseX: -0.10, baseY: 0.15, baseZ: 0.30, phase: 0.0 },
-    { light: new THREE.PointLight(0x3db89a, 4.5, 4.0), baseX: 0.10, baseY: 0.15, baseZ: 0.30, phase: 1.2 },
-    { light: new THREE.PointLight(0x2255aa, 4.0, 3.0), baseX: 0.00, baseY: 0.18, baseZ: 0.28, phase: 2.4 },
+    { light: new THREE.PointLight(0x00d4ff, 6.0, 4.0), baseX: -0.08, baseY: 0.12, baseZ: 0.20, phase: 0.0 },
+    { light: new THREE.PointLight(0x3db89a, 5.5, 4.0), baseX: 0.08, baseY: 0.12, baseZ: 0.20, phase: 1.2 },
+    { light: new THREE.PointLight(0x2255aa, 5.0, 3.5), baseX: 0.00, baseY: 0.14, baseZ: 0.18, phase: 2.4 },
 ];
 faceGhosts.forEach(fg => scene.add(fg.light));
 
