@@ -651,7 +651,7 @@ async function initRealtime() {
         type: 'session.update',
         session: {
             instructions: VIKY_IDENTITY + (sessionSummary ? `\n\n[CONTEXTO — ESTO LO SABES Y PUEDES USARLO LIBREMENTE]\n${sessionSummary}\nEspera a que te hablen, no digas nada al reconectar.` : ''),
-            voice: 'alloy',
+            voice: 'shimmer',
             input_audio_transcription: { model: 'whisper-1' },
             turn_detection: {
                 type: 'server_vad',
