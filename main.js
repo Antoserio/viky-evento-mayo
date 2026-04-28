@@ -89,7 +89,7 @@ controls.target.set(0, 0, 0);
 const ambLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambLight);
 const faceLight = new THREE.PointLight(0xffaa00, 1, 10);
-faceLight.position.set(0, 0.5, 2);
+faceLight.position.set(0, 1, 2);
 scene.add(faceLight);
 const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
 dirLight.position.set(2, 3, 5);
