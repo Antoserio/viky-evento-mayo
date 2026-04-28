@@ -8,7 +8,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 // --- CONFIGURACIÓN ---
 const MODEL_URL = './Viki_V3.gltf';
-const RECONNECT_MINUTES = 55; // cambiar a 55 para producción
+const RECONNECT_MINUTES = 3; // cambiar a 55 para producción
 
 // --- CÁMARA DE VISIÓN ---
 let videoStream = null;
