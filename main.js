@@ -741,14 +741,20 @@ function sendRealtimeEvent(event) {
 
 function handleRealtimeEvent(event) {
     switch (event.type) {
-
-        case 'output_audio_buffer.started':
-            isSpeaking = true;
-            applySpeakingExpression();
-            loadingEl.classList.add('hidden');
-            // Arrancar reloj — la timeline ya se va construyendo con los deltas
-            if (!lipsyncStartTime) lipsyncStartTime = Date.now();
-            break;
+ase 'output_audio_buffer.started':
+    isSpeaking = true;
+    
+    // MUTEAR MICRÓFONO mientras VIKY habla
+    if (localStream) {
+        localStream.getAudioTracks().forEach(track => track.enabled = false);
+        console.log('🔇 Micrófono muteado (VIKY hablando)');
+    }
+    
+    applySpeakingExpression();
+    loadingEl.classList.add('hidden');
+    // Arrancar reloj — la timeline ya se va construyendo con los deltas
+    if (!lipsyncStartTime) lipsyncStartTime = Date.now();
+    break;
 
         case 'response.done':
             // No tocar isSpeaking ni morphs aquí — el audio puede seguir sonando
@@ -756,16 +762,22 @@ function handleRealtimeEvent(event) {
             setTimeout(() => applyIdleExpression(), 800);
             break;
 
-        case 'output_audio_buffer.stopped': {
-            const audioDuration = lipsyncStartTime ? (Date.now() - lipsyncStartTime) / 1000 : 0;
-            const timelineDuration = lipsyncTimeline.length > 0 ? lipsyncTimeline[lipsyncTimeline.length - 1].end : 0;
-            isSpeaking = false;
-            lipsyncTimeline = [];
-            lipsyncStartTime = null;
-            Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });
-            break;
-        }
-
+      case 'output_audio_buffer.stopped': {
+    const audioDuration = lipsyncStartTime ? (Date.now() - lipsyncStartTime) / 1000 : 0;
+    const timelineDuration = lipsyncTimeline.length > 0 ? lipsyncTimeline[lipsyncTimeline.length - 1].end : 0;
+    isSpeaking = false;
+    
+    // DESMUTEAR MICRÓFONO cuando VIKY termina
+    if (localStream) {
+        localStream.getAudioTracks().forEach(track => track.enabled = true);
+        console.log('🔊 Micrófono activado (VIKY terminó)');
+    }
+    
+    lipsyncTimeline = [];
+    lipsyncStartTime = null;
+    Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });
+    break;
+}
         case 'response.output_item.done': {
             // En modo audio, el contenido viene como transcript no como text
             const item = event.item;
