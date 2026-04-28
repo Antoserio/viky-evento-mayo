@@ -72,8 +72,8 @@ document.getElementById('canvas-container').appendChild(renderer.domElement);
 // --- POST-PROCESSING ---
 const renderScene = new RenderPass(scene, camera);
 const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.6, 0.4, 0.85);
-bloomPass.threshold = 0.9;
-bloomPass.strength = 0.2;
+bloomPass.threshold = 0.8;
+bloomPass.strength = 0.35;
 bloomPass.radius = 0.4;
 const outputPass = new OutputPass();
 const composer = new EffectComposer(renderer);
@@ -88,7 +88,7 @@ controls.target.set(0, 0, 0);
 // Luces
 const ambLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambLight);
-const faceLight = new THREE.PointLight(0xffaa00, 0.0, 10);
+const faceLight = new THREE.PointLight(0xffaa00, 0.3, 10);
 faceLight.position.set(0, 0.5, 2);
 scene.add(faceLight);
 const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
