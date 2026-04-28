@@ -741,7 +741,7 @@ function sendRealtimeEvent(event) {
 
 function handleRealtimeEvent(event) {
     switch (event.type) {
-ase 'output_audio_buffer.started':
+case 'output_audio_buffer.started':
     isSpeaking = true;
     
     // MUTEAR MICRÓFONO mientras VIKY habla
