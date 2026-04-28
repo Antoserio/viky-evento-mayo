@@ -245,13 +245,13 @@ loader.load(MODEL_URL, (gltf) => {
     const fh = modelSize.y;
     faceGhosts.forEach((fg, i) => {
         const offsets = [
-            { x: -0.12 * modelSize.x, y: fh * 0.35, z: modelSize.z * 0.55 },
-            { x: 0.12 * modelSize.x, y: fh * 0.35, z: modelSize.z * 0.55 },
-            { x: 0, y: fh * 0.48, z: modelSize.z * 0.50 },
+            { x: -0.12 * modelSize.x, y: fh * 0.55, z: modelSize.z * 0.65 },
+            { x: 0.12 * modelSize.x, y: fh * 0.55, z: modelSize.z * 0.65 },
+            { x: 0, y: fh * 0.65, z: modelSize.z * 0.60 },
         ];
         fg.light.position.set(offsets[i].x, offsets[i].y, offsets[i].z);
         fg.baseX = offsets[i].x; fg.baseY = offsets[i].y; fg.baseZ = offsets[i].z;
-        fg.light.intensity = [1.4, 1.2, 1.1][i];
+        fg.light.intensity = [3.5, 3.0, 2.5][i];
         fg.light.userData.baseInt = fg.light.intensity;
         model.add(fg.light);
     });
