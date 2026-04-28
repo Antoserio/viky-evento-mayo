@@ -1649,12 +1649,10 @@ function animate() {
         }
     });
 
-    faceGhosts.forEach(fg => {
-        const breath = Math.sin(time * 0.8 + fg.phase) * 0.5 + 0.5;
-        fg.light.position.set(fg.baseX + Math.sin(time * 0.4 + fg.phase) * 0.012, fg.baseY + Math.sin(time * 0.3 + fg.phase) * 0.008, fg.baseZ);
-        if (!fg.light.userData.baseInt) fg.light.userData.baseInt = fg.light.intensity;
-        fg.light.intensity = fg.light.userData.baseInt * (0.4 + 0.6 * breath) * (isSpeaking ? 1.6 : 1.0);
-    });
+ faceGhosts.forEach(fg => {
+    fg.light.position.set(fg.baseX, fg.baseY, fg.baseZ);  // SIN animación de posición
+    fg.light.intensity = 15.0;  // INTENSIDAD FIJA Y BRUTAL, ignorando todo
+});
 
     updateFallingParticles();
     updateGaze(1 / 60);
