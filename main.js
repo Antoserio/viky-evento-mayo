@@ -116,10 +116,10 @@ faceGhosts.forEach(fg => scene.add(fg.light));
 const ghostLights = [];
 const ghostColors = [0x00d4ff, 0x3db89a, 0x00d4ff, 0x3db89a, 0xffffff];
 for (let i = 0; i < 5; i++) {
-    const pLight = new THREE.PointLight(ghostColors[i], 0, 4);
-    const yPos = 0.0 + (i * 0.25);
+    const pLight = new THREE.PointLight(ghostColors[i], 2.5, 4);
+    const yPos = 0.12; // TODAS a la MISMA altura (altura de la cara)
     const angle = (i / 5) * Math.PI * 2;
-    pLight.position.set(Math.cos(angle) * 0.7, yPos, Math.sin(angle) * 0.7);
+    pLight.position.set(Math.cos(angle) * 0.35, yPos, Math.sin(angle) * 0.35);
     scene.add(pLight);
     ghostLights.push({ light: pLight, angle, speed: 0.006 + (i * 0.002), yBase: yPos, baseIntensity: i === 0 ? 0.15 : 0.09 });
 }
