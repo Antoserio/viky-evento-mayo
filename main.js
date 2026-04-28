@@ -94,7 +94,7 @@ scene.add(faceLight);
 const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
 dirLight.position.set(2, 3, 5);
 scene.add(dirLight);
-const eyeLight = new THREE.PointLight(0xffffff, 0, 0);
+const eyeLight = new THREE.PointLight(0xffffff, 0.6, 0);
 eyeLight.position.set(0, 0.15, 0.8);
 scene.add(eyeLight);
 const fillLight = new THREE.PointLight(0x4477cc, 1.2, 4);
