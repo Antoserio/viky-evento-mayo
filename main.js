@@ -742,6 +742,11 @@ function sendRealtimeEvent(event) {
 function handleRealtimeEvent(event) {
     console.log('📩 Evento recibido:', event.type, event);  // ← AÑADIR ESTA LÍNEA
     switch (event.type) {
+case 'error':
+            console.error('❌ ERROR COMPLETO:', JSON.stringify(event.error, null, 2));
+            alert('ERROR DE OPENAI: ' + JSON.stringify(event.error, null, 2));
+            break;
+
 case 'output_audio_buffer.started':
     isSpeaking = true;
     applySpeakingExpression();
