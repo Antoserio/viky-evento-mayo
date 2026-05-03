@@ -740,6 +740,7 @@ function sendRealtimeEvent(event) {
 }
 
 function handleRealtimeEvent(event) {
+    console.log('📩 Evento recibido:', event.type, event);  // ← AÑADIR ESTA LÍNEA
     switch (event.type) {
 case 'output_audio_buffer.started':
     isSpeaking = true;
