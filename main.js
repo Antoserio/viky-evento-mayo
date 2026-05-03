@@ -2308,3 +2308,48 @@ async function loadPDFPage(pageNum) {
         console.error('❌ Error cargando PDF:', e);
     }
 }
+
+// =============================================================================
+// BOTÓN NUEVO EVENTO
+// =============================================================================
+(function() {
+    const btn = document.createElement('button');
+    btn.textContent = '🔄 Nuevo Evento';
+    btn.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #ff1493, #c0006a);
+        color: white;
+        border: 2px solid #ff69b4;
+        border-radius: 8px;
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(255, 20, 147, 0.4);
+        transition: all 0.3s ease;
+    `;
+    
+    btn.onmouseover = () => {
+        btn.style.transform = 'scale(1.05)';
+        btn.style.boxShadow = '0 6px 16px rgba(255, 20, 147, 0.6)';
+    };
+    
+    btn.onmouseout = () => {
+        btn.style.transform = 'scale(1)';
+        btn.style.boxShadow = '0 4px 12px rgba(255, 20, 147, 0.4)';
+    };
+    
+    btn.onclick = () => {
+        if (confirm('¿Iniciar nuevo evento?\n\nEsto borrará el resumen de conversaciones anteriores y empezará desde cero.')) {
+            localStorage.removeItem('viky_session_summary');
+            console.log('🗑️ Resumen anterior eliminado - Iniciando nuevo evento');
+            location.reload();
+        }
+    };
+    
+    document.body.appendChild(btn);
+})();
