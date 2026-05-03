@@ -903,6 +903,8 @@ case 'input_audio_buffer.speech_stopped':
             lipsyncStartTime = null;
             loadingEl.classList.add('hidden');
             break;
+    }
+}
 
 function sendTextMessage(text) {
     if (!realtimeReady) { console.warn('Realtime no listo todavía'); return; }
