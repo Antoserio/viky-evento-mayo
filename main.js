@@ -344,13 +344,43 @@ let wakeWordTimer = null;       // timeout para volver a dormida
 const WAKE_TIMEOUT_MS = 45000; // 45 segundos
 const WAKE_WORDS = ['viki', 'vicky', 'viqui', 'wiki'];
 
-function activateViki() {
+async function activateViki() {
     vikiAwake = true;
     if (wakeWordTimer) clearTimeout(wakeWordTimer);
     wakeWordTimer = setTimeout(sleepViki, WAKE_TIMEOUT_MS);
     statusEl.textContent = '✅ Viky Lista';
     statusEl.style.color = '#00d4ff';
     console.log('👋 Viki activada');
+    
+    // Si hay transcripciones pasivas acumuladas, crear mini-resumen
+    if (passiveTranscriptions.length > 0) {
+        console.log('📋 Creando mini-resumen de', passiveTranscriptions.length, 'transcripciones...');
+        try {
+            const res = await fetch('/.netlify/functions/summarize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    messages: [],
+                    passiveListening: passiveTranscriptions,
+                    instructions: 'Resume en máximo 100 palabras lo que acabas de escuchar mientras dormías. Solo los temas y nombres mencionados, nada más.'
+                })
+            });
+            const data = await res.json();
+            const miniSummary = data.summary || '';
+            if (miniSummary) {
+                console.log('✨ Mini-resumen:', miniSummary);
+                // Inyectar contexto fresco en la próxima respuesta
+                sendRealtimeEvent({
+                    type: 'conversation.item.create',
+                    item: { type: 'message', role: 'system', content: [{ type: 'input_text', text: `[CONTEXTO RECIENTE]\nMientras dormías escuchaste: ${miniSummary}` }] }
+                });
+            }
+        } catch(e) {
+            console.warn('No se pudo crear mini-resumen:', e);
+        }
+        // Limpiar transcripciones pasivas después de resumir
+        passiveTranscriptions = [];
+    }
 }
 
 function sleepViki() {
@@ -717,7 +747,7 @@ if (sessionMessages.length > 0 || passiveTranscriptions.length > 0) {
             body: JSON.stringify({ 
                 messages: sessionMessages,
                 passiveListening: passiveTranscriptions,
-                instructions: 'Resume en máximo 250 palabras TODO lo que pasó en esta sesión: (1) Charlas y ponencias que Viky presentó o moderó, con nombres de ponentes y temas. (2) Conversaciones que escuchó mientras dormía. Escribe TODO EN PASADO como hechos que ya ocurrieron: "Viky presentó a Marc Serra", "Se habló de gemelos digitales", "Antonio preguntó sobre X". Si algo está en la agenda pero NO pasó todavía, NO lo incluyas.'
+                instructions: 'Resume en máximo 250 palabras: (1) Lo que Viky dijo activamente. (2) Lo que escuchó mientras estaba dormida (charlas del ponente, conversaciones cercanas, temas mencionados). Incluye punto de la agenda si se mencionó y cualquier nombre de persona relevante.'
             })
         });
         const data = await res.json();
@@ -815,6 +845,10 @@ case 'output_audio_buffer.started':
                             item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: `[RESPONDE EN EL IDIOMA DE ESTE MENSAJE] ${text}` }] }
                         });
                         sendRealtimeEvent({ type: 'response.create' });
+                    } else {
+                        // Guardar transcripción pasiva cuando NO detecta wake word
+                        passiveTranscriptions.push({timestamp: Date.now(), text: text});
+                        console.log('👂 Viky dormida escucha:', text);
                     }
                     break; // dormida — ignorar todo lo demás
                 }
