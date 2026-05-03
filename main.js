@@ -743,19 +743,6 @@ function sendRealtimeEvent(event) {
 function handleRealtimeEvent(event) {
     switch (event.type) {
         
-        case 'error':
-            console.error('❌ ERROR COMPLETO:', JSON.stringify(event.error, null, 2));
-            
-            // Ignorar error inofensivo de cancelación
-            if (event.error.code === 'response_cancel_not_active') {
-                console.log('⚠️ Error ignorado: intento de cancelar respuesta ya finalizada');
-                break;
-            }
-            
-            // Solo alertar errores importantes
-            alert('ERROR DE OPENAI: ' + JSON.stringify(event.error, null, 2));
-            break;
-        
 case 'output_audio_buffer.started':
     isSpeaking = true;
     applySpeakingExpression();
@@ -911,13 +898,6 @@ case 'input_audio_buffer.speech_stopped':
             lipsyncTimeline = [];
             lipsyncStartTime = null;
             loadingEl.classList.add('hidden');
-            break;
-
-        case 'error':
-            // Ignorar error de cancelación cuando no hay respuesta activa (condición de carrera normal)
-            if (event.error?.code === 'response_cancel_not_active') break;
-            console.error('❌ Realtime error:', event.error);
-            statusEl.textContent = `❌ ${event.error?.message || 'Error'}`;
             break;
     }
 }
