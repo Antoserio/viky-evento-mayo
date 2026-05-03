@@ -889,18 +889,16 @@ case 'input_audio_buffer.speech_stopped':
         }
 
         case 'response.created':
-    console.log('🔵 response.created, vikiAwake:', vikiAwake);
-    if (!vikiAwake) {
-        // Dormida — cancelar respuesta que OpenAI generó automáticamente
-        sendRealtimeEvent({ type: 'response.cancel' });
-        break;
+            console.log('🔵 response.created, vikiAwake:', vikiAwake);
+            if (!vikiAwake) {
+                // Dormida — cancelar respuesta que OpenAI generó automáticamente
+                sendRealtimeEvent({ type: 'response.cancel' });
+                break;
             }
             lipsyncTimeline = [];
             lipsyncStartTime = null;
             loadingEl.classList.add('hidden');
             break;
-    }
-}
 
 function sendTextMessage(text) {
     if (!realtimeReady) { console.warn('Realtime no listo todavía'); return; }
