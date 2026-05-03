@@ -717,7 +717,7 @@ if (sessionMessages.length > 0 || passiveTranscriptions.length > 0) {
             body: JSON.stringify({ 
                 messages: sessionMessages,
                 passiveListening: passiveTranscriptions,
-                instructions: 'Resume en máximo 250 palabras: (1) Lo que Viky dijo activamente. (2) Lo que escuchó mientras estaba dormida (charlas del ponente, conversaciones cercanas, temas mencionados). Incluye punto de la agenda si se mencionó y cualquier nombre de persona relevante.'
+                instructions: 'Resume en máximo 250 palabras TODO lo que pasó en esta sesión: (1) Charlas y ponencias que Viky presentó o moderó, con nombres de ponentes y temas. (2) Conversaciones que escuchó mientras dormía. Escribe TODO EN PASADO como hechos que ya ocurrieron: "Viky presentó a Marc Serra", "Se habló de gemelos digitales", "Antonio preguntó sobre X". Si algo está en la agenda pero NO pasó todavía, NO lo incluyas.'
             })
         });
         const data = await res.json();
