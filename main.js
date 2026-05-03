@@ -825,23 +825,7 @@ case 'output_audio_buffer.started':
                         });
                         sendRealtimeEvent({ type: 'response.create' });
                     }
-                   if (!vikiAwake) {
-    if (checkWakeWord(text)) {
-        activateViki();
-        // Enviar el texto con instrucción de idioma explícita
-        sendRealtimeEvent({
-            type: 'conversation.item.create',
-            item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: `[RESPONDE EN EL IDIOMA DE ESTE MENSAJE] ${text}` }] }
-        });
-        sendRealtimeEvent({ type: 'response.create' });
-    } else {
-        // Guardar lo que escucha dormida
-        if (text) {
-            passiveTranscriptions.push({timestamp: Date.now(), text: text});
-        }
-    }
-    break; // dormida — no procesa más
-}
+                    break; // dormida — ignorar todo lo demás
                 }
 
                 // Activa — resetear timer y procesar normalmente
@@ -891,6 +875,7 @@ case 'input_audio_buffer.speech_stopped':
         const audioTranscript = event.transcript?.trim();
         if (audioTranscript) {
             passiveTranscriptions.push({timestamp: Date.now(), text: audioTranscript});
+            console.log('👂 Viky dormida escucha:', audioTranscript);
         }
         break;
     }
