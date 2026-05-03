@@ -740,16 +740,15 @@ function sendRealtimeEvent(event) {
 }
 
 function handleRealtimeEvent(event) {
+    console.log('📩 Evento recibido:', event.type, event);  // ← AÑADIR ESTA LÍNEA
     switch (event.type) {
+case 'error':
+            console.error('❌ ERROR COMPLETO:', JSON.stringify(event.error, null, 2));
+            alert('ERROR DE OPENAI: ' + JSON.stringify(event.error, null, 2));
+            break;
+
 case 'output_audio_buffer.started':
     isSpeaking = true;
-    
-    // MUTEAR MICRÓFONO mientras VIKY habla
-    if (localStream) {
-        localStream.getAudioTracks().forEach(track => track.enabled = false);
-        console.log('🔇 Micrófono muteado (VIKY hablando)');
-    }
-    
     applySpeakingExpression();
     loadingEl.classList.add('hidden');
     // Arrancar reloj — la timeline ya se va construyendo con los deltas
@@ -766,13 +765,6 @@ case 'output_audio_buffer.started':
     const audioDuration = lipsyncStartTime ? (Date.now() - lipsyncStartTime) / 1000 : 0;
     const timelineDuration = lipsyncTimeline.length > 0 ? lipsyncTimeline[lipsyncTimeline.length - 1].end : 0;
     isSpeaking = false;
-    
-    // DESMUTEAR MICRÓFONO cuando VIKY termina
-    if (localStream) {
-        localStream.getAudioTracks().forEach(track => track.enabled = true);
-        console.log('🔊 Micrófono activado (VIKY terminó)');
-    }
-    
     lipsyncTimeline = [];
     lipsyncStartTime = null;
     Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });

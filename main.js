@@ -331,7 +331,7 @@ let dc = null;
 let localStream = null;
 let isMicrophoneActive = true;
 let realtimeReady = false;
-let sessionSummary = '';
+let sessionSummary = localStorage.getItem('viky_session_summary') || '';
 let passiveTranscriptions = [];
 let isSpeaking = false;
 let speechStartTime = null; // para medir duración antes de interrumpir
@@ -718,6 +718,7 @@ if (sessionMessages.length > 0 || passiveTranscriptions.length > 0) {
         });
         const data = await res.json();
         sessionSummary = data.summary || '';
+        localStorage.setItem('viky_session_summary', sessionSummary);
         console.log('📝 Resumen de sesión:', sessionSummary);
     } catch(e) {
         console.warn('No se pudo generar resumen:', e);
@@ -740,15 +741,30 @@ function sendRealtimeEvent(event) {
 }
 
 function handleRealtimeEvent(event) {
-    console.log('📩 Evento recibido:', event.type, event);  // ← AÑADIR ESTA LÍNEA
     switch (event.type) {
-case 'error':
+        
+        case 'error':
             console.error('❌ ERROR COMPLETO:', JSON.stringify(event.error, null, 2));
+            
+            // Ignorar error inofensivo de cancelación
+            if (event.error.code === 'response_cancel_not_active') {
+                console.log('⚠️ Error ignorado: intento de cancelar respuesta ya finalizada');
+                break;
+            }
+            
+            // Solo alertar errores importantes
             alert('ERROR DE OPENAI: ' + JSON.stringify(event.error, null, 2));
             break;
-
+        
 case 'output_audio_buffer.started':
     isSpeaking = true;
+    
+    // MUTEAR MICRÓFONO mientras VIKY habla
+    if (localStream) {
+        localStream.getAudioTracks().forEach(track => track.enabled = false);
+        console.log('🔇 Micrófono muteado (VIKY hablando)');
+    }
+    
     applySpeakingExpression();
     loadingEl.classList.add('hidden');
     // Arrancar reloj — la timeline ya se va construyendo con los deltas
@@ -765,6 +781,13 @@ case 'output_audio_buffer.started':
     const audioDuration = lipsyncStartTime ? (Date.now() - lipsyncStartTime) / 1000 : 0;
     const timelineDuration = lipsyncTimeline.length > 0 ? lipsyncTimeline[lipsyncTimeline.length - 1].end : 0;
     isSpeaking = false;
+    
+    // DESMUTEAR MICRÓFONO cuando VIKY termina
+    if (localStream) {
+        localStream.getAudioTracks().forEach(track => track.enabled = true);
+        console.log('🔊 Micrófono activado (VIKY terminó)');
+    }
+    
     lipsyncTimeline = [];
     lipsyncStartTime = null;
     Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });
