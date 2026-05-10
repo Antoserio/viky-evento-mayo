@@ -319,8 +319,7 @@ loader.load(MODEL_URL, (gltf) => {
 });
 
 // --- UI ---
-const chatInput = document.getElementById('chat-input');
-const sendBtn = document.getElementById('send-btn');
+// chat-input y send-btn eliminados del UI
 const micBtn = document.getElementById('mic-btn');
 
 // =============================================================================
@@ -503,41 +502,36 @@ function buildTimelineFromText(text) {
 }
 
 function updateLipsyncFromTimeline() {
-    if (!analyser || !dataArray) return;
+    if (!analyser || !dataArray || !window.animatableMeshes) return;
 
-    // --- FFT: energía real del audio (garantiza movimiento continuo) ---
     analyser.getByteFrequencyData(dataArray);
-    let lowFreq = 0;
-    for (let i = 2; i < 20; i++) lowFreq += dataArray[i];
-    // Normalizar a rango 0-1 con multiplicador más bajo para más dinámica
-    lowFreq = Math.min((lowFreq / 18 / 128) * 1.6, 1.0);
-    // Aplicar curva de potencia para enfatizar variaciones medias y comprimir picos
-    lowFreq = Math.pow(lowFreq, 0.6);
-    const audioActive = lowFreq > 0.06;
+    let energy = 0;
+    for (let i = 2; i < 24; i++) energy += dataArray[i];
+    energy = Math.min((energy / 22 / 128) * 2.0, 1.0);
+    energy = Math.pow(energy, 0.5);
+    const active = energy > 0.05;
 
-    // --- Timeline: fonema activo por tiempo estimado ---
-    let timelineTargets = null;
-    if (lipsyncStartTime && lipsyncTimeline.length > 0) {
-        const elapsed = (Date.now() - lipsyncStartTime) / 1000;
-        const active = lipsyncTimeline.find(e => elapsed >= e.start && elapsed <= e.end);
-        if (active && !active.visemes.visema_sil) {
-            // Coarticulación con siguiente fonema
-            const activeIdx = lipsyncTimeline.indexOf(active);
-            const next = activeIdx + 1 < lipsyncTimeline.length ? lipsyncTimeline[activeIdx + 1] : null;
-            const timeLeft = active.end - elapsed;
-            const blend = (next && !next.visemes.visema_sil && timeLeft < 0.04)
-                ? Math.max(0, 1 - timeLeft / 0.04) : 0;
-            if (blend > 0 && next) {
-                timelineTargets = {};
-                const allKeys = new Set([...Object.keys(active.visemes), ...Object.keys(next.visemes)]);
-                allKeys.forEach(k => {
-                    timelineTargets[k] = (active.visemes[k] || 0) * (1 - blend * 0.3) + (next.visemes[k] || 0) * (blend * 0.3);
-                });
-            } else {
-                timelineTargets = active.visemes;
-            }
+    window.animatableMeshes.forEach(mesh => {
+        const dict = mesh.morphTargetDictionary;
+        if (!dict) return;
+        const find = (n) => Object.keys(dict).find(k => k.toLowerCase() === n.toLowerCase());
+
+        const keyJaw = find('jawOpen');
+        const keyA   = find('visema_a');
+        const keySil = find('visema_sil');
+
+        if (!active) {
+            if (keySil) morphTargetValues[`${mesh.name}_${keySil}`] = 1.0;
+            if (keyJaw) morphTargetValues[`${mesh.name}_${keyJaw}`] = 0;
+            if (keyA)   morphTargetValues[`${mesh.name}_${keyA}`]   = 0;
+            return;
         }
-    }
+
+        if (keySil) morphTargetValues[`${mesh.name}_${keySil}`] = 0;
+        if (keyA)   morphTargetValues[`${mesh.name}_${keyA}`]   = Math.min(energy * 0.8, 0.7);
+        if (keyJaw) morphTargetValues[`${mesh.name}_${keyJaw}`] = Math.min(energy * 0.35, 0.4);
+    });
+}
 
     // --- Combinar: timeline para forma de boca, FFT para amplitud ---
     if (!window.animatableMeshes) return;
@@ -1033,19 +1027,7 @@ micBtn.addEventListener('click', () => {
     applyExpression(isMicrophoneActive ? 'listening' : 'neutral');
 });
 
-// Enviar texto manual
-sendBtn.addEventListener('click', () => {
-    ensureAudioContext();
-    const text = chatInput.value.trim();
-    if (text) { sendTextMessage(text); chatInput.value = ''; }
-});
-chatInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-        ensureAudioContext();
-        const text = chatInput.value.trim();
-        if (text) { sendTextMessage(text); chatInput.value = ''; }
-    }
-});
+// send y chat eliminados — solo voz
 
 // =============================================================================
 // LIPSYNC POR ENERGÍA FFT
@@ -1472,9 +1454,7 @@ function downloadConversationPDF() {
 
 const downloadBtn = document.getElementById('download-btn');
 if (downloadBtn) downloadBtn.addEventListener('click', downloadConversationPDF);
-const pdfBtn = document.getElementById('pdf-btn');
-if (pdfBtn) pdfBtn.addEventListener('click', downloadConversationPDF);
-function showPdfBtn() { if (pdfBtn) pdfBtn.classList.remove('hidden'); }
+// pdf-btn eliminado del UI
 function checkDownloadRequest(text) {
     return ['descargar', 'guardar conversacion', 'pdf', 'resumen'].some(w => text.toLowerCase().includes(w));
 }
@@ -1736,6 +1716,11 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
 });
+
+
+// =============================================================================
+// BOTÓN NUEVO EVENTO
+// =============================================================================
 document.getElementById('new-event-btn').addEventListener('click', () => {
     if (confirm('¿Iniciar nuevo evento?\n\nEsto borrará el resumen anterior.')) {
         localStorage.removeItem('viky_session_summary');
