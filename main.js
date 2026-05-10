@@ -567,8 +567,19 @@ function updateLipsyncFromTimeline() {
                 if (meshKey) applyVal(meshKey, timelineTargets[k] * amp);
             });
         } else {
-            applyVal(keyA,   Math.min(lowFreq * 0.55, 0.60));
-            applyVal(keyJaw, Math.min(lowFreq * 0.18, 0.28));
+            // Sin fonema en timeline pero hay audio — usar último fonema activo
+            const lastEntry = lipsyncTimeline.length > 0 ? lipsyncTimeline[lipsyncTimeline.length - 1] : null;
+            const lastTargets = lastEntry && !lastEntry.visemes.visema_sil ? lastEntry.visemes : null;
+            if (lastTargets) {
+                const amp = Math.max(lowFreq * 0.7, 0.25);
+                Object.keys(lastTargets).forEach(k => {
+                    const meshKey = findKey(k);
+                    if (meshKey) applyVal(meshKey, lastTargets[k] * amp);
+                });
+            } else {
+                applyVal(keyA,   Math.min(lowFreq * 0.55, 0.60));
+                applyVal(keyJaw, Math.min(lowFreq * 0.18, 0.28));
+            }
         }
     });
 }
