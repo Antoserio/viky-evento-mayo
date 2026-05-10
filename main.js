@@ -533,49 +533,7 @@ function updateLipsyncFromTimeline() {
     });
 }
 
-    // --- Combinar: timeline para forma de boca, FFT para amplitud ---
-    if (!window.animatableMeshes) return;
-    window.animatableMeshes.forEach(mesh => {
-        const dict = mesh.morphTargetDictionary;
-        if (!dict) return;
-
-        const findKey = (name) => Object.keys(dict).find(k => k.toLowerCase() === name.toLowerCase());
-        const applyVal = (key, val) => {
-            if (!key || dict[key] === undefined) return;
-            const fullKey = `${mesh.name}_${key}`;
-            morphTargetValues[fullKey] = val;
-        };
-
-        const keySil = findKey('visema_sil');
-        const keyA   = findKey('visema_a');
-        const keyJaw = findKey('jawOpen');
-
-        if (!audioActive) {
-            // Silencio real — dejar que el LERP cierre suavemente
-            // Solo ponemos visema_sil a 1, los demás los lleva el LERP a 0
-            applyVal(keySil, 1.0);
-            return;
-        }
-
-        // Limpiar todos los visemas de boca antes de aplicar nuevos
-        const MOUTH_KEYS = ['visema_a','visema_e','visema_i','visema_o','visema_u','visema_p','visema_f','visema_t','visema_k','visema_s','visema_r','visema_sh','visema_sil','jawOpen','mouthFunnel','mouthPucker'];
-        MOUTH_KEYS.forEach(k => { const mk = findKey(k); if (mk) applyVal(mk, 0); });
-
-        if (timelineTargets) {
-            // Fonema activo — aplicar forma escalada por FFT
-            const amp = Math.max(lowFreq * 0.9, 0.35);
-            Object.keys(timelineTargets).forEach(k => {
-                const meshKey = findKey(k);
-                if (meshKey) applyVal(meshKey, timelineTargets[k] * amp);
-            });
-        } else {
-            // Sin fonema pero hay audio — FFT puro
-            applyVal(keyA,   Math.min(lowFreq * 0.55, 0.60));
-            applyVal(keyJaw, Math.min(lowFreq * 0.18, 0.28));
-        }
-    });
-}
-
+   
 const VIKY_IDENTITY = `
 
 [ROL]
