@@ -406,5 +406,32 @@ body::after {
     width: 100%;
     height: 100%;
 }
+#event-logo {
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+    opacity: 0.9;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.1));
+}
 
+#new-event-btn {
+    background: var(--fluge-teal);
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    min-width: 54px;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#new-event-btn:hover {
+    background: var(--fluge-teal-bright);
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--fluge-teal-glow);
+}
 /* (fin del archivo) */

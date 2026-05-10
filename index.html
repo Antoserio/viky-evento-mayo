@@ -10,12 +10,15 @@
 <body>
     <div id="canvas-container"></div>
 
-    <div id="ui-container">
+   <div id="ui-container">
+    <img src="logo.png" id="event-logo" alt="ENGINYERS BCN" />
+    <div id="bottom-controls">
         <button id="mic-btn">🎙️</button>
-        <button id="pdf-btn" class="hidden" title="Descargar conversación PDF">📄</button>
-        <textarea id="chat-input" placeholder="Escribe o habla con Viky..."></textarea>
-        <button id="send-btn">Enviar</button>
+        <button id="new-event-btn" title="Nuevo Evento">🔄</button>
     </div>
+    <textarea id="chat-input" placeholder="Escribe o habla con Viky..."></textarea>
+    <button id="send-btn">Enviar</button>
+</div>
 
     <div id="loading" class="hidden">Pensando...</div>
     <div id="status">Esperando modelo...</div>

@@ -468,7 +468,7 @@ let lipsyncTimeline = [];
 // Momento en que arrancó el audio (Date.now())
 let lipsyncStartTime = null;
 // Duración media estimada por carácter de habla (ms) — ajustable
-const MS_PER_CHAR = 60;
+const MS_PER_CHAR = 45;
 
 function buildTimelineFromText(text) {
     // Convierte texto a timeline de visemas con tiempos estimados
@@ -809,7 +809,7 @@ case 'output_audio_buffer.started':
     isSpeaking = true;
     applySpeakingExpression();
     loadingEl.classList.add('hidden');
-    if (!lipsyncStartTime) lipsyncStartTime = Date.now();
+    if (!lipsyncStartTime) lipsyncStartTime = Date.now() - 120;
     break;
 
         case 'response.done':
@@ -1736,47 +1736,9 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
 });
-
-// BOTÓN NUEVO EVENTO
-// =============================================================================
-(function() {
-    const btn = document.createElement('button');
-    btn.textContent = '🔄 Nuevo Evento';
-    btn.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 10000;
-        padding: 12px 20px;
-        background: linear-gradient(135deg, #ff1493, #c0006a);
-        color: white;
-        border: 2px solid #ff69b4;
-        border-radius: 8px;
-        font-family: 'Bebas Neue', sans-serif;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(255, 20, 147, 0.4);
-        transition: all 0.3s ease;
-    `;
-    
-    btn.onmouseover = () => {
-        btn.style.transform = 'scale(1.05)';
-        btn.style.boxShadow = '0 6px 16px rgba(255, 20, 147, 0.6)';
-    };
-    
-    btn.onmouseout = () => {
-        btn.style.transform = 'scale(1)';
-        btn.style.boxShadow = '0 4px 12px rgba(255, 20, 147, 0.4)';
-    };
-    
-    btn.onclick = () => {
-        if (confirm('¿Iniciar nuevo evento?\n\nEsto borrará el resumen de conversaciones anteriores y empezará desde cero.')) {
-            localStorage.removeItem('viky_session_summary');
-            console.log('🗑️ Resumen anterior eliminado - Iniciando nuevo evento');
-            location.reload();
-        }
-    };
-    
-    document.body.appendChild(btn);
-})();
+document.getElementById('new-event-btn').addEventListener('click', () => {
+    if (confirm('¿Iniciar nuevo evento?\n\nEsto borrará el resumen anterior.')) {
+        localStorage.removeItem('viky_session_summary');
+        location.reload();
+    }
+});
