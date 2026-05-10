@@ -502,34 +502,74 @@ function buildTimelineFromText(text) {
 }
 
 function updateLipsyncFromTimeline() {
-    if (!analyser || !dataArray || !window.animatableMeshes) return;
+    if (!analyser || !dataArray) return;
 
+    // --- FFT: energía real del audio ---
     analyser.getByteFrequencyData(dataArray);
-    let energy = 0;
-    for (let i = 2; i < 24; i++) energy += dataArray[i];
-    energy = Math.min((energy / 22 / 128) * 2.0, 1.0);
-    energy = Math.pow(energy, 0.5);
-    const active = energy > 0.05;
+    let lowFreq = 0;
+    for (let i = 2; i < 20; i++) lowFreq += dataArray[i];
+    lowFreq = Math.min((lowFreq / 18 / 128) * 1.6, 1.0);
+    lowFreq = Math.pow(lowFreq, 0.5);
+    const audioActive = lowFreq > 0.06;
 
+    // --- Timeline: fonema activo por tiempo estimado (con offset -180ms para sincronizar con audio real) ---
+    let timelineTargets = null;
+    if (lipsyncStartTime && lipsyncTimeline.length > 0) {
+        const elapsed = Math.max(0, (Date.now() - lipsyncStartTime - 180) / 1000);
+        const active = lipsyncTimeline.find(e => elapsed >= e.start && elapsed <= e.end);
+        if (active && !active.visemes.visema_sil) {
+            const activeIdx = lipsyncTimeline.indexOf(active);
+            const next = activeIdx + 1 < lipsyncTimeline.length ? lipsyncTimeline[activeIdx + 1] : null;
+            const timeLeft = active.end - elapsed;
+            const blend = (next && !next.visemes.visema_sil && timeLeft < 0.04)
+                ? Math.max(0, 1 - timeLeft / 0.04) : 0;
+            if (blend > 0 && next) {
+                timelineTargets = {};
+                const allKeys = new Set([...Object.keys(active.visemes), ...Object.keys(next.visemes)]);
+                allKeys.forEach(k => {
+                    timelineTargets[k] = (active.visemes[k] || 0) * (1 - blend * 0.3) + (next.visemes[k] || 0) * (blend * 0.3);
+                });
+            } else {
+                timelineTargets = active.visemes;
+            }
+        }
+    }
+
+    // --- Combinar: timeline para forma de boca, FFT para amplitud ---
+    if (!window.animatableMeshes) return;
     window.animatableMeshes.forEach(mesh => {
         const dict = mesh.morphTargetDictionary;
         if (!dict) return;
-        const find = (n) => Object.keys(dict).find(k => k.toLowerCase() === n.toLowerCase());
 
-        const keyJaw = find('jawOpen');
-        const keyA   = find('visema_a');
-        const keySil = find('visema_sil');
+        const findKey = (name) => Object.keys(dict).find(k => k.toLowerCase() === name.toLowerCase());
+        const applyVal = (key, val) => {
+            if (!key || dict[key] === undefined) return;
+            const fullKey = `${mesh.name}_${key}`;
+            morphTargetValues[fullKey] = val;
+        };
 
-        if (!active) {
-            if (keySil) morphTargetValues[`${mesh.name}_${keySil}`] = 1.0;
-            if (keyJaw) morphTargetValues[`${mesh.name}_${keyJaw}`] = 0;
-            if (keyA)   morphTargetValues[`${mesh.name}_${keyA}`]   = 0;
+        const keySil = findKey('visema_sil');
+        const keyA   = findKey('visema_a');
+        const keyJaw = findKey('jawOpen');
+
+        if (!audioActive) {
+            applyVal(keySil, 1.0);
             return;
         }
 
-        if (keySil) morphTargetValues[`${mesh.name}_${keySil}`] = 0;
-        if (keyA)   morphTargetValues[`${mesh.name}_${keyA}`]   = Math.min(energy * 0.8, 0.7);
-        if (keyJaw) morphTargetValues[`${mesh.name}_${keyJaw}`] = Math.min(energy * 0.35, 0.4);
+        const MOUTH_KEYS = ['visema_a','visema_e','visema_i','visema_o','visema_u','visema_p','visema_f','visema_t','visema_k','visema_s','visema_r','visema_sh','visema_sil','jawOpen','mouthFunnel','mouthPucker'];
+        MOUTH_KEYS.forEach(k => { const mk = findKey(k); if (mk) applyVal(mk, 0); });
+
+        if (timelineTargets) {
+            const amp = Math.max(lowFreq * 0.9, 0.35);
+            Object.keys(timelineTargets).forEach(k => {
+                const meshKey = findKey(k);
+                if (meshKey) applyVal(meshKey, timelineTargets[k] * amp);
+            });
+        } else {
+            applyVal(keyA,   Math.min(lowFreq * 0.55, 0.60));
+            applyVal(keyJaw, Math.min(lowFreq * 0.18, 0.28));
+        }
     });
 }
 
