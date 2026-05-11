@@ -1759,11 +1759,11 @@ function animate() {
                 const target = morphTargetValues[fullKey] || 0;
                 if (currentMorphInfluences[fullKey] === undefined) currentMorphInfluences[fullKey] = 0;
                 if (cleanKey === 'jawopen') {
-                    const speed = target > currentMorphInfluences[fullKey] ? 0.22 : 0.04;
+                    const speed = target > currentMorphInfluences[fullKey] ? 0.22 : 0.10;
                     currentMorphInfluences[fullKey] += (target - currentMorphInfluences[fullKey]) * speed;
                 } else {
                     const isExpr = cleanKey.includes('mouthsmile') || cleanKey.includes('brow') || cleanKey.includes('cheeksquint');
-                    const speed = isExpr ? 0.06 : cleanKey.includes('visema') ? 0.20 : 0.12;
+                    const speed = isExpr ? 0.06 : cleanKey.includes('visema') ? 0.30 : 0.12;
                     currentMorphInfluences[fullKey] += (target - currentMorphInfluences[fullKey]) * speed;
                 }
                 mesh.morphTargetInfluences[idx] = Math.max(0, currentMorphInfluences[fullKey]);
