@@ -555,7 +555,6 @@ function buildTimelineFromText(text) {
 
 function updateLipsyncFromTimeline() {
     if (!analyser || !dataArray) return;
-
     // --- FFT: energía real del audio ---
     analyser.getByteFrequencyData(dataArray);
     let lowFreq = 0;
@@ -563,8 +562,30 @@ function updateLipsyncFromTimeline() {
     lowFreq = Math.min((lowFreq / 18 / 128) * 1.6, 1.0);
     lowFreq = Math.pow(lowFreq, 0.5);
     const audioActive = lowFreq > 0.06;
+    
+    // NUEVO: Si la timeline terminó (tiempo transcurrido > duración total), resetear
+    if (lipsyncStartTime && lipsyncTimeline.length > 0) {
+        const elapsed = Math.max(0, (Date.now() - lipsyncStartTime - 180) / 1000);
+        const timelineEnd = lipsyncTimeline[lipsyncTimeline.length - 1].end;
+        
+        if (elapsed > timelineEnd + 0.3) {
+            // Timeline terminada hace más de 300ms, resetear todo
+            if (!window.animatableMeshes) return;
+            window.animatableMeshes.forEach(mesh => {
+                const dict = mesh.morphTargetDictionary;
+                if (!dict) return;
+                Object.keys(dict).forEach(key => {
+                    const fullKey = `${mesh.name}_${key}`;
+                    if (key.toLowerCase().includes('visema') || key.toLowerCase().includes('jaw')) {
+                        morphTargetValues[fullKey] = 0;
+                    }
+                });
+            });
+            return;
+        }
+    }
 
-    // --- Timeline: fonema activo por tiempo estimado (con offset -180ms para sincronizar con audio real) ---
+   // --- Timeline: fonema activo por tiempo estimado (con offset -180ms) ---
     let timelineTargets = null;
     if (lipsyncStartTime && lipsyncTimeline.length > 0) {
         const elapsed = Math.max(0, (Date.now() - lipsyncStartTime - 180) / 1000);
