@@ -518,6 +518,7 @@ const DIGRAPH_MAP = {
 let lipsyncTimeline = [];
 // Momento en que arrancó el audio (Date.now())
 let lipsyncStartTime = null;
+let lipsyncActive = false;  // NUEVA FLAG
 // Duración media estimada por carácter de habla (ms) — ajustable
 const MS_PER_CHAR = 45;
 
@@ -554,6 +555,7 @@ function buildTimelineFromText(text) {
 }
 
 function updateLipsyncFromTimeline() {
+    if (!lipsyncActive) return;  // SALIR SI NO ESTÁ ACTIVO
     if (!analyser || !dataArray) return;
     // --- FFT: energía real del audio ---
     analyser.getByteFrequencyData(dataArray);
@@ -851,6 +853,7 @@ function handleRealtimeEvent(event) {
 case 'output_audio_buffer.started':
     audioBufferStartTime = Date.now();
     isSpeaking = true;
+    lipsyncActive = true;  // ACTIVAR LIPSYNC
     applySpeakingExpression();
     loadingEl.classList.add('hidden');
     if (!lipsyncStartTime) lipsyncStartTime = Date.now() - 120;
@@ -895,6 +898,7 @@ case 'output_audio_buffer.started':
     logEvent('AUDIO', '⏹️ Audio buffer stopped', stopData);
     
     isSpeaking = false;
+    lipsyncActive = false;  // DESACTIVAR LIPSYNC
     lipsyncTimeline = [];
     lipsyncStartTime = null;
     
