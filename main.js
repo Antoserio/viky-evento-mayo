@@ -1780,8 +1780,9 @@ function animate() {
                 Object.keys(dict).forEach(key => {
                     if (key.toLowerCase().includes('visema') || key.toLowerCase().includes('jaw')) {
                         const fullKey = `${mesh.name}_${key}`;
-                        morphTargetValues[fullKey] = 0;
-                        currentMorphInfluences[fullKey] = 0;
+                        // Decay gradual en vez de reset directo
+                        morphTargetValues[fullKey] *= 0.75;
+                        currentMorphInfluences[fullKey] *= 0.75;
                     }
                 });
             });
