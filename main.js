@@ -6,6 +6,53 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
+// =============================================================================
+// SISTEMA DE LOGGING Y MÉTRICAS
+// =============================================================================
+const LOG_EVENTS = true;
+const eventLog = [];
+const metrics = {
+    totalResponses: 0,
+    completedResponses: 0,
+    cutResponses: 0,
+    recoveryAttempts: 0,
+    recoverySuccesses: 0,
+    audioBufferStops: 0,
+    responseDones: 0,
+    startTime: Date.now()
+};
+
+function logEvent(category, message, data = {}) {
+    const timestamp = new Date().toISOString();
+    const logEntry = { timestamp, category, message, ...data };
+    eventLog.push(logEntry);
+    
+    if (eventLog.length > 200) eventLog.shift();
+    
+    if (eventLog.length % 10 === 0) {
+        try {
+            localStorage.setItem('viky_event_log', JSON.stringify(eventLog));
+            localStorage.setItem('viky_metrics', JSON.stringify(metrics));
+        } catch(e) {}
+    }
+    
+    if (LOG_EVENTS) {
+        console.log(`[${category}] ${message}`, data);
+    }
+}
+
+window.exportVikyLogs = function() {
+    const exportData = {
+        metrics,
+        eventLog,
+        sessionDuration: (Date.now() - metrics.startTime) / 1000 / 60,
+        timestamp: new Date().toISOString()
+    };
+    console.log('=== VIKY EVENT LOG ===');
+    console.log(JSON.stringify(exportData, null, 2));
+    return exportData;
+}
+
 // --- CONFIGURACIÓN ---
 const MODEL_URL = './Viki_V3.gltf';
 const RECONNECT_MINUTES = 50; // cambiar a 55 para producción
@@ -338,11 +385,16 @@ let speechStartTime = null;
 // =============================================================================
 // SISTEMA ANTI-CORTE — variables de control
 // =============================================================================
-let lastResponseTranscript = '';       // transcript acumulado de la respuesta actual
-let lastResponseComplete = false;      // true si response.done llegó antes de stopped
-let antiCutRetryCount = 0;             // reintentos para no entrar en bucle
-const ANTI_CUT_MAX_RETRIES = 2;
-const MIN_COMPLETE_SENTENCE_CHARS = 40; // frases muy cortas no se consideran corte
+let lastResponseTranscript = '';
+let lastResponseComplete = false;
+let antiCutRetryCount = 0;
+let responseStartTime = null;          // NUEVO
+let audioBufferStartTime = null;       // NUEVO
+let expectedResponseEnd = false;       // NUEVO
+
+const ANTI_CUT_MAX_RETRIES = 3;        // cambiar de 2 a 3
+const MIN_COMPLETE_SENTENCE_CHARS = 40;
+const MIN_AUDIO_DURATION_MS = 500;     // NUEVO
 
 // =============================================================================
 // WAKE WORD / MODO DORMIDO
@@ -798,63 +850,128 @@ function handleRealtimeEvent(event) {
     switch (event.type) {
         
 case 'output_audio_buffer.started':
+    audioBufferStartTime = Date.now();
     isSpeaking = true;
     applySpeakingExpression();
     loadingEl.classList.add('hidden');
     if (!lipsyncStartTime) lipsyncStartTime = Date.now() - 120;
+    logEvent('AUDIO', '▶️ Audio buffer started', {
+        responseAge: responseStartTime ? Date.now() - responseStartTime : null
+    });
     break;
 
         case 'response.done':
-            lastResponseComplete = true;
-            antiCutRetryCount = 0; // respuesta completa — reset reintentos
-            setTimeout(() => applyIdleExpression(), 800);
-            break;
+    lastResponseComplete = true;
+    expectedResponseEnd = true;
+    metrics.responseDones++;
+    
+    logEvent('RESPONSE', '✅ Response done', {
+        transcript: lastResponseTranscript.substring(0, 100),
+        duration: responseStartTime ? Date.now() - responseStartTime : null,
+        isSpeaking: isSpeaking
+    });
+    
+    antiCutRetryCount = 0;
+    setTimeout(() => applyIdleExpression(), 800);
+    break;
 
       case 'output_audio_buffer.stopped': {
-    const audioDuration = lipsyncStartTime ? (Date.now() - lipsyncStartTime) / 1000 : 0;
+    const now = Date.now();
+    const audioDuration = audioBufferStartTime ? now - audioBufferStartTime : 0;
+    const totalResponseDuration = responseStartTime ? now - responseStartTime : 0;
+    
+    metrics.audioBufferStops++;
+    
+    const stopData = {
+        audioDuration,
+        totalResponseDuration,
+        transcript: lastResponseTranscript.substring(0, 100),
+        transcriptLength: lastResponseTranscript.length,
+        lastResponseComplete,
+        expectedResponseEnd,
+        isSpeaking,
+        antiCutRetryCount
+    };
+    
+    logEvent('AUDIO', '⏹️ Audio buffer stopped', stopData);
+
     isSpeaking = false;
     lipsyncTimeline = [];
     lipsyncStartTime = null;
     Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });
 
-    // =============================================================================
-    // SISTEMA ANTI-CORTE
-    // Detecta si el audio se cortó antes de que response.done llegara
-    // y el transcript acumulado no termina en puntuación final
-    // =============================================================================
+    // SISTEMA ANTI-CORTE MEJORADO
     const transcript = lastResponseTranscript.trim();
     const endsClean = /[.!?…"»]$/.test(transcript);
     const isTooShort = transcript.length < MIN_COMPLETE_SENTENCE_CHARS;
-    const wasIncomplete = !lastResponseComplete && !endsClean && !isTooShort;
-
+    const audioTooShort = audioDuration < MIN_AUDIO_DURATION_MS;
+    const wasCutMidSpeech = !lastResponseComplete && !expectedResponseEnd;
+    const wasIncomplete = wasCutMidSpeech || (!endsClean && !isTooShort && !lastResponseComplete);
+    
+    const cutDetectionData = {
+        endsClean,
+        isTooShort,
+        audioTooShort,
+        wasCutMidSpeech,
+        wasIncomplete,
+        lastChar: transcript.slice(-5)
+    };
+    
     if (wasIncomplete && antiCutRetryCount < ANTI_CUT_MAX_RETRIES && vikiAwake && realtimeReady) {
+        metrics.cutResponses++;
+        metrics.recoveryAttempts++;
         antiCutRetryCount++;
-        console.warn(`⚠️ ANTI-CORTE [${antiCutRetryCount}/${ANTI_CUT_MAX_RETRIES}] transcript="${transcript.slice(-60)}"`);
         
-        // Pequeña pausa natural antes de recuperar
+        logEvent('ANTI-CUT', `⚠️ CORTE DETECTADO [${antiCutRetryCount}/${ANTI_CUT_MAX_RETRIES}]`, {
+            ...cutDetectionData,
+            ...stopData
+        });
+        
         setTimeout(() => {
-            if (!realtimeReady || !vikiAwake) return;
+            if (!realtimeReady || !vikiAwake) {
+                logEvent('ANTI-CUT', 'Recuperación cancelada (no ready/awake)');
+                return;
+            }
+            
             const recoveryPrompt = transcript.length > 20
                 ? `Acabas de tener un problema técnico y tu frase se cortó. El último fragmento que dijiste fue: "${transcript.slice(-80)}". Continúa la frase de forma natural desde donde te cortaste, sin mencionar ningún problema técnico. El público no debe notar nada.`
                 : `Hubo un problema técnico. Retoma la palabra de forma natural y continúa con lo que ibas a decir, sin mencionar ningún fallo.`;
+            
+            logEvent('ANTI-CUT', '🔄 Enviando recovery prompt', { 
+                promptLength: recoveryPrompt.length 
+            });
             
             sendRealtimeEvent({
                 type: 'conversation.item.create',
                 item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: recoveryPrompt }] }
             });
             sendRealtimeEvent({ type: 'response.create' });
+            
+            metrics.recoverySuccesses++;
         }, 300);
     } else {
-        // Respuesta completa o reintentos agotados — reset
+        if (wasIncomplete) {
+            logEvent('ANTI-CUT', '❌ Corte detectado pero max retries alcanzado', cutDetectionData);
+        } else {
+            metrics.completedResponses++;
+            logEvent('RESPONSE', '✅ Respuesta completa', { 
+                transcriptLength: transcript.length,
+                audioDuration 
+            });
+        }
+        
         lastResponseTranscript = '';
         lastResponseComplete = false;
+        expectedResponseEnd = false;
+        audioBufferStartTime = null;
+        
         if (antiCutRetryCount >= ANTI_CUT_MAX_RETRIES) {
-            console.warn('⚠️ ANTI-CORTE: máximo de reintentos alcanzado, continuando sin recuperación');
             antiCutRetryCount = 0;
         }
     }
     break;
 }
+
         case 'response.output_item.done': {
             const item = event.item;
             if (item?.content) {
@@ -938,18 +1055,24 @@ case 'input_audio_buffer.speech_stopped':
         }
 
         case 'response.created':
-            console.log('🔵 response.created, vikiAwake:', vikiAwake);
-            if (!vikiAwake) {
-                sendRealtimeEvent({ type: 'response.cancel' });
-                break;
-            }
-            // Reset anti-corte para nueva respuesta
-            lastResponseTranscript = '';
-            lastResponseComplete = false;
-            lipsyncTimeline = [];
-            lipsyncStartTime = null;
-            loadingEl.classList.add('hidden');
-            break;
+    responseStartTime = Date.now();
+    metrics.totalResponses++;
+    
+    logEvent('RESPONSE', '🔵 Response created', { vikiAwake });
+    
+    if (!vikiAwake) {
+        sendRealtimeEvent({ type: 'response.cancel' });
+        logEvent('RESPONSE', 'Response cancelada (dormida)');
+        break;
+    }
+    
+    lastResponseTranscript = '';
+    lastResponseComplete = false;
+    expectedResponseEnd = false;
+    audioBufferStartTime = null;
+    lipsyncTimeline = [];
+    lipsyncStartTime = null;
+    break;
     }
 }
 
@@ -1724,4 +1847,10 @@ document.getElementById('new-event-btn').addEventListener('click', () => {
         localStorage.removeItem('viky_session_summary');
         location.reload();
     }
+});
+
+// Log inicial
+logEvent('SYSTEM', '🚀 Sistema inicializado', { 
+    reconnectMinutes: RECONNECT_MINUTES,
+    antiCutMaxRetries: ANTI_CUT_MAX_RETRIES 
 });
