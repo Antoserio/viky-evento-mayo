@@ -898,7 +898,23 @@ case 'output_audio_buffer.started':
     isSpeaking = false;
     lipsyncTimeline = [];
     lipsyncStartTime = null;
-    Object.keys(morphTargetValues).forEach(k => { morphTargetValues[k] = 0; });
+// RESET AGRESIVO de todos los morphs
+    Object.keys(morphTargetValues).forEach(k => { 
+        morphTargetValues[k] = 0; 
+    });
+    Object.keys(currentMorphInfluences).forEach(k => { 
+        currentMorphInfluences[k] = 0; 
+    });
+    
+    // Forzar cierre de boca en el siguiente frame
+    setTimeout(() => {
+        setMorphValue('jawOpen', 0);
+        Object.keys(morphTargetValues).forEach(k => {
+            if (k.toLowerCase().includes('visema') || k.toLowerCase().includes('jaw')) {
+                morphTargetValues[k] = 0;
+            }
+        });
+    }, 50);
 
     // SISTEMA ANTI-CORTE MEJORADO
     const transcript = lastResponseTranscript.trim();
