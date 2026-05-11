@@ -520,7 +520,7 @@ let lipsyncTimeline = [];
 let lipsyncStartTime = null;
 let lipsyncActive = false;  // NUEVA FLAG
 // Duración media estimada por carácter de habla (ms) — ajustable
-const MS_PER_CHAR = 45;
+const MS_PER_CHAR = 65;
 
 function buildTimelineFromText(text) {
     // Convierte texto a timeline de visemas con tiempos estimados
@@ -568,7 +568,7 @@ function updateLipsyncFromTimeline() {
    // --- Timeline: fonema activo por tiempo estimado (con offset -180ms) ---
     let timelineTargets = null;
     if (lipsyncStartTime && lipsyncTimeline.length > 0) {
-        const elapsed = Math.max(0, (Date.now() - lipsyncStartTime - 180) / 1000);
+        const elapsed = Math.max(0, (Date.now() - lipsyncStartTime - 140) / 1000);
         const active = lipsyncTimeline.find(e => elapsed >= e.start && elapsed <= e.end);
         if (active && !active.visemes.visema_sil) {
             const activeIdx = lipsyncTimeline.indexOf(active);
@@ -1741,35 +1741,12 @@ function updateFallingParticles() {
 function animate() {
     requestAnimationFrame(animate);
     const time = Date.now() * 0.001;
-
+    
     if (isSpeaking && lipsyncActive) {
-    updateLipsyncFromTimeline();
-} else {
-    // Forzar cierre cuando NO habla
-    if (window.animatableMeshes) {
-        window.animatableMeshes.forEach(mesh => {
-            const dict = mesh.morphTargetDictionary;
-            if (!dict) return;
-            Object.keys(dict).forEach(key => {
-                if (key.toLowerCase().includes('visema') || key.toLowerCase().includes('jaw')) {
-                    const idx = dict[key];
-                    const fullKey = `${mesh.name}_${key}`;
-                    
-                    // Decay en mesh
-                    if (mesh.morphTargetInfluences[idx] > 0) {
-                        mesh.morphTargetInfluences[idx] *= 0.5;
-                    }
-                    
-                    // Decay en currentMorphInfluences también
-                    if (currentMorphInfluences[fullKey] > 0) {
-                        currentMorphInfluences[fullKey] *= 0.5;
-                    }
-                }
-            });
-        });
+        updateLipsyncFromTimeline();
     }
-}
 
+    // ESTE BLOQUE SIEMPRE SE EJECUTA (aplica morphs)
     if (window.animatableMeshes) {
         window.animatableMeshes.forEach(mesh => {
             const dict = mesh.morphTargetDictionary;
@@ -1779,10 +1756,8 @@ function animate() {
                 const idx = dict[key];
                 const cleanKey = key.toLowerCase();
                 if (cleanKey === 'mouthclose' || cleanKey.includes('blink') || cleanKey.includes('eyewide')) return;
-
                 const target = morphTargetValues[fullKey] || 0;
                 if (currentMorphInfluences[fullKey] === undefined) currentMorphInfluences[fullKey] = 0;
-
                 if (cleanKey === 'jawopen') {
                     const speed = target > currentMorphInfluences[fullKey] ? 0.22 : 0.10;
                     currentMorphInfluences[fullKey] += (target - currentMorphInfluences[fullKey]) * speed;
@@ -1794,6 +1769,23 @@ function animate() {
                 mesh.morphTargetInfluences[idx] = Math.max(0, currentMorphInfluences[fullKey]);
             });
         });
+    }
+
+    // DECAY AL FINAL - después de aplicar
+    if (!isSpeaking || !lipsyncActive) {
+        if (window.animatableMeshes) {
+            window.animatableMeshes.forEach(mesh => {
+                const dict = mesh.morphTargetDictionary;
+                if (!dict) return;
+                Object.keys(dict).forEach(key => {
+                    if (key.toLowerCase().includes('visema') || key.toLowerCase().includes('jaw')) {
+                        const fullKey = `${mesh.name}_${key}`;
+                        morphTargetValues[fullKey] = 0;
+                        currentMorphInfluences[fullKey] = 0;
+                    }
+                });
+            });
+        }
     }
 
     // Movimiento de cabeza
