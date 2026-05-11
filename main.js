@@ -568,7 +568,7 @@ function updateLipsyncFromTimeline() {
         const elapsed = Math.max(0, (Date.now() - lipsyncStartTime - 180) / 1000);
         const timelineEnd = lipsyncTimeline[lipsyncTimeline.length - 1].end;
         
-        if (elapsed > timelineEnd + 0.3) {
+        if (elapsed > timelineEnd + 2.0) {
             // Timeline terminada hace más de 300ms, resetear todo
             if (!window.animatableMeshes) return;
             window.animatableMeshes.forEach(mesh => {
