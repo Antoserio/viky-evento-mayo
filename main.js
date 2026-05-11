@@ -909,36 +909,6 @@ case 'output_audio_buffer.started':
     Object.keys(currentMorphInfluences).forEach(k => { 
         currentMorphInfluences[k] = 0; 
     });
-    
-    // Forzar cierre de boca directamente
-    setTimeout(() => {
-        Object.keys(morphTargetValues).forEach(k => {
-            if (k.toLowerCase().includes('visema') || k.toLowerCase().includes('jaw')) {
-                morphTargetValues[k] = 0;
-            }
-        });
-        Object.keys(currentMorphInfluences).forEach(k => {
-            if (k.toLowerCase().includes('visema') || k.toLowerCase().includes('jaw')) {
-                currentMorphInfluences[k] = 0;
-            }
-        });
-    }, 50);
-
-    // Forzar aplicación directa en meshes
-    setTimeout(() => {
-        if (window.animatableMeshes) {
-            window.animatableMeshes.forEach(mesh => {
-                const dict = mesh.morphTargetDictionary;
-                if (!dict) return;
-                Object.keys(dict).forEach(key => {
-                   if (key.toLowerCase().includes('visema') || key.toLowerCase().includes('jaw')) {
-                       const idx = dict[key];
-                       mesh.morphTargetInfluences[idx] = 0;
-                   }
-                });
-            });
-         }
-     }, 200);
 
     // SISTEMA ANTI-CORTE MEJORADO
     const transcript = lastResponseTranscript.trim();
@@ -1772,7 +1742,33 @@ function animate() {
     requestAnimationFrame(animate);
     const time = Date.now() * 0.001;
 
-    if (isSpeaking) updateLipsyncFromTimeline();
+    if (isSpeaking && lipsyncActive) {
+    updateLipsyncFromTimeline();
+} else {
+    // Forzar cierre cuando NO habla
+    if (window.animatableMeshes) {
+        window.animatableMeshes.forEach(mesh => {
+            const dict = mesh.morphTargetDictionary;
+            if (!dict) return;
+            Object.keys(dict).forEach(key => {
+                if (key.toLowerCase().includes('visema') || key.toLowerCase().includes('jaw')) {
+                    const idx = dict[key];
+                    const fullKey = `${mesh.name}_${key}`;
+                    
+                    // Decay en mesh
+                    if (mesh.morphTargetInfluences[idx] > 0) {
+                        mesh.morphTargetInfluences[idx] *= 0.5;
+                    }
+                    
+                    // Decay en currentMorphInfluences también
+                    if (currentMorphInfluences[fullKey] > 0) {
+                        currentMorphInfluences[fullKey] *= 0.5;
+                    }
+                }
+            });
+        });
+    }
+}
 
     if (window.animatableMeshes) {
         window.animatableMeshes.forEach(mesh => {
