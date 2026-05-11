@@ -875,7 +875,7 @@ case 'output_audio_buffer.started':
     setTimeout(() => applyIdleExpression(), 800);
     break;
 
-      case 'output_audio_buffer.stopped': {
+    case 'output_audio_buffer.stopped': {
     const now = Date.now();
     const audioDuration = audioBufferStartTime ? now - audioBufferStartTime : 0;
     const totalResponseDuration = responseStartTime ? now - responseStartTime : 0;
@@ -894,11 +894,12 @@ case 'output_audio_buffer.started':
     };
     
     logEvent('AUDIO', '⏹️ Audio buffer stopped', stopData);
-
+    
     isSpeaking = false;
     lipsyncTimeline = [];
     lipsyncStartTime = null;
-// RESET AGRESIVO de todos los morphs
+    
+    // RESET AGRESIVO de todos los morphs
     Object.keys(morphTargetValues).forEach(k => { 
         morphTargetValues[k] = 0; 
     });
@@ -906,15 +907,23 @@ case 'output_audio_buffer.started':
         currentMorphInfluences[k] = 0; 
     });
     
-    // Forzar cierre de boca en el siguiente frame
+    // Forzar cierre de boca directamente
     setTimeout(() => {
-        setMorphValue('jawOpen', 0);
         Object.keys(morphTargetValues).forEach(k => {
             if (k.toLowerCase().includes('visema') || k.toLowerCase().includes('jaw')) {
                 morphTargetValues[k] = 0;
             }
         });
+        Object.keys(currentMorphInfluences).forEach(k => {
+            if (k.toLowerCase().includes('visema') || k.toLowerCase().includes('jaw')) {
+                currentMorphInfluences[k] = 0;
+            }
+        });
     }, 50);
+    
+    // SISTEMA ANTI-CORTE MEJORADO
+    const transcript = lastResponseTranscript.trim();
+    // ... resto del código ...
 
     // SISTEMA ANTI-CORTE MEJORADO
     const transcript = lastResponseTranscript.trim();
