@@ -924,6 +924,22 @@ case 'output_audio_buffer.started':
         });
     }, 50);
 
+    // Forzar aplicación directa en meshes
+    setTimeout(() => {
+        if (window.animatableMeshes) {
+            window.animatableMeshes.forEach(mesh => {
+                const dict = mesh.morphTargetDictionary;
+                if (!dict) return;
+                Object.keys(dict).forEach(key => {
+                   if (key.toLowerCase().includes('visema') || key.toLowerCase().includes('jaw')) {
+                       const idx = dict[key];
+                       mesh.morphTargetInfluences[idx] = 0;
+                   }
+                });
+            });
+         }
+     }, 200);
+
     // SISTEMA ANTI-CORTE MEJORADO
     const transcript = lastResponseTranscript.trim();
     const endsClean = /[.!?…"»]$/.test(transcript);
