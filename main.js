@@ -920,10 +920,6 @@ case 'output_audio_buffer.started':
             }
         });
     }, 50);
-    
-    // SISTEMA ANTI-CORTE MEJORADO
-    const transcript = lastResponseTranscript.trim();
-    // ... resto del código ...
 
     // SISTEMA ANTI-CORTE MEJORADO
     const transcript = lastResponseTranscript.trim();
