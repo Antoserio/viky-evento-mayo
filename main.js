@@ -403,6 +403,7 @@ let vikiAwake = false;          // false = dormida, true = activa
 let wakeWordTimer = null;       // timeout para volver a dormida
 const WAKE_TIMEOUT_MS = 45000; // 45 segundos
 const WAKE_WORDS = ['viki', 'vicky', 'viqui', 'wiki'];
+const SLEEP_WORDS = ['continuamos', 'continua', 'continuem'];
 
 async function activateViki() {
     vikiAwake = true;
@@ -461,6 +462,11 @@ function resetWakeTimer() {
 function checkWakeWord(text) {
     const lower = text.toLowerCase();
     return WAKE_WORDS.some(w => lower.includes(w));
+}
+
+function checkSleepWord(text) {
+    const lower = text.toLowerCase();
+    return SLEEP_WORDS.some(w => lower.includes(w));
 }
 
 // =============================================================================
@@ -1041,7 +1047,13 @@ case 'output_audio_buffer.started':
                     break; // dormida — ignorar todo lo demás
                 }
 
-                // Activa — resetear timer y procesar normalmente
+                  if (checkSleepWord(text)) {
+                    console.log('😴 Sleep word detectada:', text);
+                    sleepViki();
+                    break;
+                }
+                
+                // Si no, resetear timer y procesar normalmente
                 resetWakeTimer();
                 addSessionMessage('user', text);
                 extractUserData(text);
