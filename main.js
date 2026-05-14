@@ -761,18 +761,73 @@ Exjugador de futbol al CF Sabadell. President de l'Esport Club Granollers (funda
 - CRITICAL: En les intervencions 2, 3 i 4, has de dir EXACTAMENT el text especificat, sense canvis ni adaptacions.
 `;
 
+// =============================================================================
+// AUTO-RETRY PARA CONEXIÓN ROBUSTA CON STARLINK
+// =============================================================================
+const MAX_INIT_RETRIES = 3;
+const RETRY_DELAY_MS = 3000;
+
+async function initRealtimeWithRetry(retryCount = 0) {
+    try {
+        logEvent('CONNECTION', `Intento de conexión ${retryCount + 1}/${MAX_INIT_RETRIES}`);
+        await initRealtime();
+        logEvent('CONNECTION', '✅ Conexión exitosa');
+        return true;
+    } catch (error) {
+        logEvent('CONNECTION', `❌ Intento ${retryCount + 1} falló`, { error: error.message });
+        
+        if (retryCount < MAX_INIT_RETRIES - 1) {
+            statusEl.textContent = `🔄 Reintentando... (${retryCount + 2}/${MAX_INIT_RETRIES})`;
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+            return initRealtimeWithRetry(retryCount + 1);
+        } else {
+            statusEl.textContent = '❌ Error de conexión. Refresca la página.';
+            logEvent('CONNECTION', '❌ Todos los intentos fallaron');
+            throw error;
+        }
+    }
+}
+
 async function initRealtime() {
     try {
         statusEl.textContent = '🔄 Conectando...';
 
         // 1. Token efímero desde Netlify
-        const tokenRes = await fetch('/.netlify/functions/session');
+        const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+const tokenRes = await fetch('/.netlify/functions/session', {
+    signal: controller.signal
+});
+clearTimeout(timeoutId);
         const tokenData = await tokenRes.json();
         if (!tokenData.client_secret?.value) throw new Error('Token no recibido: ' + JSON.stringify(tokenData));
         const ephemeralKey = tokenData.client_secret.value;
 
         // 2. RTCPeerConnection
         pc = new RTCPeerConnection();
+// Auto-reconnect si la conexión WebRTC falla
+pc.oniceconnectionstatechange = () => {
+    const state = pc.iceConnectionState;
+    logEvent('WEBRTC', 'ICE connection state changed', { state });
+    
+    if (state === 'failed' || state === 'disconnected') {
+        logEvent('WEBRTC', '⚠️ Conexión perdida, intentando reconectar en 3s...');
+        statusEl.textContent = '🔄 Reconectando...';
+        
+        setTimeout(() => {
+            if (pc && (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected')) {
+                logEvent('WEBRTC', '🔄 Iniciando reconexión automática');
+                reconnectRealtime().catch(err => {
+                    logEvent('WEBRTC', '❌ Reconexión falló', { error: err.message });
+                    statusEl.textContent = '❌ Error de conexión. Refresca la página.';
+                });
+            }
+        }, 3000);
+    } else if (state === 'connected') {
+        logEvent('WEBRTC', '✅ WebRTC conectado');
+    }
+};
 
         // 3. Audio de respuesta → AudioContext para lipsync
         const remoteAudioEl = document.createElement('audio');
@@ -843,14 +898,20 @@ async function initRealtime() {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
 
-        const sdpRes = await fetch('https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${ephemeralKey}`,
-                'Content-Type': 'application/sdp',
-            },
-            body: offer.sdp,
-        });
+        const sdpController = new AbortController();
+const sdpTimeoutId = setTimeout(() => sdpController.abort(), 20000);
+
+const sdpRes = await fetch('https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17', {
+    method: 'POST',
+    signal: sdpController.signal,
+    headers: {
+        'Authorization': `Bearer ${ephemeralKey}`,
+        'Content-Type': 'application/sdp',
+    },
+    body: offer.sdp,
+});
+
+clearTimeout(sdpTimeoutId);
 
         const answerSdp = await sdpRes.text();
         await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
@@ -895,7 +956,7 @@ passiveTranscriptions = [];
     if (pc) { try { pc.close(); } catch(e){} pc = null; }
     if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
     document.querySelectorAll('audio').forEach(a => { a.srcObject = null; a.remove(); });
-    await initRealtime();
+    await initRealtimeWithRetry();
 }
 
 function sendRealtimeEvent(event) {
@@ -1201,7 +1262,7 @@ const unlockAndStart = async () => {
     await ensureCamera();
     if (!realtimeStarted) {
         realtimeStarted = true;
-        await initRealtime();
+        await initRealtimeWithRetry();
     }
     window.removeEventListener('click', unlockAndStart);
     window.removeEventListener('touchstart', unlockAndStart);
