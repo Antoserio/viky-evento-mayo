@@ -804,19 +804,9 @@ clearTimeout(timeoutId);
         if (!tokenData.client_secret?.value) throw new Error('Token no recibido: ' + JSON.stringify(tokenData));
         const ephemeralKey = tokenData.client_secret.value;
 
-        // 2. RTCPeerConnection
-        pc = new RTCPeerConnection({
-    iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { 
-            urls: 'turn:openrelay.metered.ca:80',
-            username: 'openrelayproject',
-            credential: 'openrelayproject'
-        }
-    ],
-    iceTransportPolicy: 'relay', // FORZAR relay - no P2P directo
-    iceCandidatePoolSize: 10
-});
+ // 2. RTCPeerConnection
+pc = new RTCPeerConnection();
+
 // Auto-reconnect si la conexión WebRTC falla
 pc.oniceconnectionstatechange = () => {
     const state = pc.iceConnectionState;
